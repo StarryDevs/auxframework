@@ -1,0 +1,25 @@
+[versions]
+kotlin = "2.1.20"
+kotlinx-datetime = "0.6.1"
+kotlinx-serialization-json = "1.7.3"
+kotlinx-coroutines = "1.9.0"
+slf4j = "2.1.0-alpha1"
+logback = "1.5.18"
+adventure-kt = "a00db40a98"
+
+[libraries]
+kotlin-gradle-plugin = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "kotlin" }
+kotlinx-datetime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version.ref = "kotlinx-datetime" }
+kotlinx-serialization = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinx-serialization-json" }
+kotlinx-coroutines = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kotlinx-coroutines" }
+slf4j-api = { module = "org.slf4j:slf4j-api", version.ref = "slf4j" }
+logback-classic = { module = "ch.qos.logback:logback-classic", version.ref = "logback" }
+logback-core = { module = "ch.qos.logback:logback-core", version.ref = "logback" }
+adventure-parser = { module = "com.github.StarryDevs.adventure-kt:parser", version.ref = "adventure-kt" }
+
+[bundles]
+kotlinx-ecosystem = ["kotlinx-datetime", "kotlinx-serialization", "kotlinx-coroutines"]
+logback = ["logback-classic", "logback-core", "slf4j-api"]
+
+[plugins]
+kotlin-plugin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
