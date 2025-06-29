@@ -42,13 +42,9 @@ open class AnnotationConfigApplicationContext(
 
     protected val beans = mutableMapOf<String, BeanDefinition>()
 
-    val propertyResolver = PropertyResolver(Properties())
+    override val propertyResolver = PropertyResolver(Properties())
 
     protected val beanPostProcessors = mutableListOf<BeanPostProcessor>()
-
-    init {
-        load()
-    }
 
     protected fun collectImports(
         annotated: KClass<*>,
@@ -61,7 +57,11 @@ open class AnnotationConfigApplicationContext(
         import.classes.forEach { collectImports(it, classes, stack) }
     }
 
-    protected open fun load() {
+    protected var loaded: Boolean = false
+
+    override fun load() {
+        if (loaded) return
+        loaded = true
         val beanDefinitions = mutableMapOf<String, BeanDefinition>()
         val beanClasses = mutableSetOf<KClass<*>>()
         if (applicationClass != null) beanClasses += applicationClass

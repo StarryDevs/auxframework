@@ -192,6 +192,9 @@ class PropertyResolver(properties: Map<String, String>): MutableMap<String, Stri
 
 }
 
+inline fun <reified T : Any> PropertyResolver.resolve(text: String) =
+    resolve<T>(parse(text))
+
 inline fun <reified T : Any> PropertyResolver.resolve(value: Any?) =
     resolve(T::class, value)
 

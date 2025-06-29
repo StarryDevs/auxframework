@@ -2,10 +2,13 @@ package starry.auxframework.context
 
 import starry.auxframework.context.bean.BeanDefinition
 import starry.auxframework.context.bean.BeanFactory
+import starry.auxframework.context.property.PropertyResolver
 import kotlin.reflect.KClass
 
 
 abstract class ConfigurableApplicationContext : BeanFactory {
+
+    abstract val propertyResolver: PropertyResolver
 
 
     /**
@@ -40,5 +43,7 @@ abstract class ConfigurableApplicationContext : BeanFactory {
     override fun <T : Any> getBeans(type: KClass<T>) = findBeanDefinitions(type).mapNotNull { it.getInstance() as? T }.toSet()
 
     override fun <T : Any> getBean(type: KClass<T>): T = getBeans(type).single()
+
+    abstract fun load()
 
 }

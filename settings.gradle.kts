@@ -10,5 +10,6 @@ plugins {
 }
 
 include(":aux-context")
+include(":aux-application")
 
 rootProject.name = "auxframework"

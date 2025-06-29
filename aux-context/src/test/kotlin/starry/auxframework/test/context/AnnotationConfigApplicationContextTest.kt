@@ -54,6 +54,7 @@ class AnnotationConfigApplicationContextTest {
     @Test
     fun test() {
         val ctx = AnnotationConfigApplicationContext(TestApplication::class, this::class.java.packageName)
+        ctx.load()
         val bean = ctx.getBean<TestComponent>()
         assertIs<TestComponent>(bean)
         assertIs<TestComponent2>(bean.dependency)
