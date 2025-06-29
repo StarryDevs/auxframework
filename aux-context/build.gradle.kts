@@ -10,8 +10,6 @@ plugins {
     `maven-publish`
 }
 
-group = "starry.auxframework.context"
-
 dependencies {
     api(libs.bundles.kotlinx.ecosystem)
     api(libs.bundles.logback)

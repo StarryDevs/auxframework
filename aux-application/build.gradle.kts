@@ -6,8 +6,6 @@ plugins {
     application
 }
 
-group = "starry.auxframework.application"
-
 dependencies {
     api(project(":aux-context"))
     api(project(":aux-aop"))

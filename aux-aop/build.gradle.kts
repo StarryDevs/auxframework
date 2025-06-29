@@ -5,8 +5,6 @@ plugins {
     `maven-publish`
 }
 
-group = "starry.auxframework.aop"
-
 dependencies {
     api(project(":aux-context"))
     api(libs.bytebuddy)
