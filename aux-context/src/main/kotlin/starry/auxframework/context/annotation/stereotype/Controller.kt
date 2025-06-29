@@ -1,10 +1,10 @@
-package starry.auxframework.context.annotation
+package starry.auxframework.context.annotation.stereotype
 
 import java.lang.annotation.Inherited
 
 @MustBeDocumented
 @Retention(AnnotationRetention.RUNTIME)
 @Target(AnnotationTarget.CLASS)
-@Indexed
+@Component
 @Inherited
-annotation class Component()
+annotation class Controller

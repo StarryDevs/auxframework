@@ -1,6 +1,5 @@
-package starry.auxframework.context.annotation
+package starry.auxframework.context.annotation.stereotype
 
-import starry.auxframework.context.annotation.stereotype.Component
 import java.lang.annotation.Inherited
 
 @MustBeDocumented
@@ -8,4 +7,4 @@ import java.lang.annotation.Inherited
 @Target(AnnotationTarget.CLASS)
 @Component
 @Inherited
-annotation class Configuration()
+annotation class Repository

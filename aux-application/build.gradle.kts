@@ -10,6 +10,7 @@ group = "starry.auxframework.application"
 
 dependencies {
     api(project(":aux-context"))
+    api(project(":aux-aop"))
     api(libs.bundles.adventure)
 
     testImplementation(kotlin("test"))

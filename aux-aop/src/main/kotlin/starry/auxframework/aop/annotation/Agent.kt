@@ -1,4 +1,4 @@
-package starry.auxframework.annotation
+package starry.auxframework.aop.annotation
 
 import java.lang.annotation.Inherited
 import kotlin.reflect.KClass

@@ -4,8 +4,8 @@ import org.junit.jupiter.api.Test
 import starry.auxframework.context.AnnotationConfigApplicationContext
 import starry.auxframework.context.annotation.Autowired
 import starry.auxframework.context.annotation.Bean
-import starry.auxframework.context.annotation.Component
 import starry.auxframework.context.annotation.Value
+import starry.auxframework.context.annotation.stereotype.Component
 import starry.auxframework.context.bean.InitializingBean
 import starry.auxframework.util.getBean
 import java.io.File

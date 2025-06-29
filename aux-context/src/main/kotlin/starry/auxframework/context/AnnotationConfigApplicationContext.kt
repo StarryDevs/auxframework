@@ -2,6 +2,8 @@ package starry.auxframework.context
 
 import starry.auxframework.AuxFramework
 import starry.auxframework.context.annotation.*
+import starry.auxframework.context.annotation.Configuration
+import starry.auxframework.context.annotation.stereotype.Indexed
 import starry.auxframework.context.aware.BeanFactoryAware
 import starry.auxframework.context.aware.ConfigurableApplicationContextAware
 import starry.auxframework.context.bean.BeanDefinition

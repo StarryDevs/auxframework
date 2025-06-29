@@ -8,7 +8,6 @@ import net.bytebuddy.dynamic.scaffold.subclass.ConstructorStrategy
 import net.bytebuddy.implementation.InvocationHandlerAdapter
 import net.bytebuddy.matcher.ElementMatchers
 
-
 object ProxyGenerator {
 
     private val byteBuddy = ByteBuddy()

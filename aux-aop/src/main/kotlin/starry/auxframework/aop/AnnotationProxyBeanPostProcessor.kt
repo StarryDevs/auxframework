@@ -1,6 +1,6 @@
 package starry.auxframework.aop
 
-import starry.auxframework.annotation.Aspect
+import starry.auxframework.aop.annotation.Aspect
 import starry.auxframework.context.ConfigurableApplicationContext
 import starry.auxframework.context.aware.ConfigurableApplicationContextAware
 import starry.auxframework.context.bean.BeanFactory

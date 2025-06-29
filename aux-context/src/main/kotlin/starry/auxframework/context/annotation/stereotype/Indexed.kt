@@ -1,4 +1,4 @@
-package starry.auxframework.context.annotation
+package starry.auxframework.context.annotation.stereotype
 
 import java.lang.annotation.Inherited
 
