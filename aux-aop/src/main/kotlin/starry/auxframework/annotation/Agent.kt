@@ -7,4 +7,5 @@ import kotlin.reflect.KClass
 @Retention(AnnotationRetention.RUNTIME)
 @Inherited
 @MustBeDocumented
-annotation class Around(val beanName: String = "", val beanClass: KClass<*> = Unit::class)
+@Repeatable
+annotation class Agent(val type: KClass<*> = Unit::class, val name: String = "" , val order: Int = -1)

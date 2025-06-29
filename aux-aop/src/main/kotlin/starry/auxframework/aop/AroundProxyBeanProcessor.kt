@@ -1,7 +1,7 @@
 package starry.auxframework.aop
 
-import starry.auxframework.annotation.Around
+import starry.auxframework.annotation.Agent
 import starry.auxframework.context.annotation.Configuration
 
 @Configuration
-class AroundProxyBeanProcessor : AnnotationProxyBeanPostProcessor<Around>()
+class AroundProxyBeanProcessor : AnnotationProxyBeanPostProcessor<Agent>()

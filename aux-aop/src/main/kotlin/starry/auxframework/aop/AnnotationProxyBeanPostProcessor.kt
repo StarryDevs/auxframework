@@ -1,15 +1,15 @@
 package starry.auxframework.aop
 
+import starry.auxframework.annotation.Aspect
 import starry.auxframework.context.ConfigurableApplicationContext
 import starry.auxframework.context.aware.ConfigurableApplicationContextAware
 import starry.auxframework.context.bean.BeanFactory
 import starry.auxframework.context.bean.BeanPostProcessor
-import java.lang.reflect.InvocationHandler
 import java.lang.reflect.ParameterizedType
 import kotlin.reflect.KClass
+import kotlin.reflect.full.findAnnotation
 import kotlin.reflect.full.findAnnotations
 import kotlin.reflect.full.memberProperties
-import kotlin.reflect.jvm.jvmName
 
 abstract class AnnotationProxyBeanPostProcessor<T : Annotation> : BeanPostProcessor, ConfigurableApplicationContextAware {
 
@@ -31,21 +31,25 @@ abstract class AnnotationProxyBeanPostProcessor<T : Annotation> : BeanPostProces
     override fun postProcessBeforeInitialization(instance: Any?, beanName: String, beanFactory: BeanFactory): Any? {
         if (instance == null) return null
         val beanClass = instance::class
-        val annotation = beanClass.findAnnotations(annotationClass).firstOrNull() ?: return instance
-        val arguments = annotationClass.memberProperties.map { it.get(annotation) }
-        val handlerName = arguments.filterIsInstance<String>().single().takeUnless(String::isEmpty)
-        val handlerType = arguments.filterIsInstance<Class<*>>().single()
-        val handler = if (handlerName != null) beanFactory.getBean(handlerName) else beanFactory.getBean(handlerType.kotlin)
-        val proxy = createProxy(beanClass, instance, handler)
+        val aspect = beanClass.findAnnotation<Aspect>() ?: return instance
+        if (!aspect.enabled) return instance
+        val handlers = beanClass.findAnnotations(annotationClass)
+            .map { annotation ->
+                val arguments = annotationClass.memberProperties.map { it.get(annotation) }
+                val order = arguments.filterIsInstance<Int>().singleOrNull() ?: -1
+                val handlerName = arguments.filterIsInstance<String>().singleOrNull()?.takeUnless(String::isEmpty)
+                val handlerType = arguments.filterIsInstance<Class<*>>().singleOrNull()
+                order to if (handlerName != null) beanFactory.getBean(handlerName) else beanFactory.getBean(handlerType!!.kotlin)
+            }
+            .toList()
+        if (handlers.isEmpty()) return instance
+        val proxy = createProxy(beanClass, instance, handlers)
         rawBeanPool[beanName] = instance
         return proxy
     }
 
-    fun createProxy(beanClass: KClass<*>, instance: Any, handler: Any): Any {
-        if (handler !is InvocationHandler) {
-            throw IllegalArgumentException("Handler for annotation ${annotationClass.jvmName} must implement InvocationHandler")
-        }
-        return ProxyGenerator.createProxy(instance, handler)
+    fun createProxy(beanClass: KClass<*>, instance: Any, handlers: List<Pair<Int, Any>>): Any {
+        return ProxyGenerator.createProxy(instance, handlers)
     }
 
 
