@@ -37,10 +37,10 @@ abstract class ConfigurableApplicationContext : BeanFactory {
 
     @Suppress("UNCHECKED_CAST")
     override fun <T : Any> getBean(name: String): T
-        = findBeanDefinition(name)?.getInstance() as? T ?: throw IllegalArgumentException("No bean found with name: $name")
+        = findBeanDefinition(name)?.instanceObject as? T ?: throw IllegalArgumentException("No bean found with name: $name")
 
     @Suppress("UNCHECKED_CAST")
-    override fun <T : Any> getBeans(type: KClass<T>) = findBeanDefinitions(type).mapNotNull { it.getInstance() as? T }.toSet()
+    override fun <T : Any> getBeans(type: KClass<T>) = findBeanDefinitions(type).mapNotNull { it.instanceObject as? T }.toSet()
 
     override fun <T : Any> getBean(type: KClass<T>): T = getBeans(type).single()
 

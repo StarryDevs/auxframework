@@ -2,6 +2,8 @@ package starry.auxframework.context
 
 import starry.auxframework.AuxFramework
 import starry.auxframework.context.annotation.*
+import starry.auxframework.context.aware.BeanFactoryAware
+import starry.auxframework.context.aware.ConfigurableApplicationContextAware
 import starry.auxframework.context.bean.BeanDefinition
 import starry.auxframework.context.bean.BeanPostProcessor
 import starry.auxframework.context.bean.InitializingBean
@@ -148,21 +150,30 @@ open class AnnotationConfigApplicationContext(
         }
         val instance = constructor.callBy(arguments)
         beanDefinition.instanceObject = instance
-        beanDefinition.constructed = true
         beanDefinition.getInitMethod()?.call(instance)
-        beanDefinition.proxiedObject = beanPostProcessors.fold(beanDefinition.getInstance()) { it, processor ->
+        callAwares(beanDefinition.instanceObject)
+        beanDefinition.instanceObject = beanPostProcessors.fold(beanDefinition.instanceObject) { it, processor ->
             processor.postProcessBeforeInitialization(it, beanDefinition.name, this)
         }
-        if (beanDefinition.getInstance() is BeanPostProcessor) {
-            beanPostProcessors += beanDefinition.getInstance() as BeanPostProcessor
+        if (beanDefinition.instanceObject is BeanPostProcessor) {
+            beanPostProcessors += beanDefinition.instanceObject as BeanPostProcessor
         }
+        beanDefinition.constructed = true
         autowire(beanDefinition)
         return beanDefinition.instanceObject
     }
 
+    protected fun callAwares(obj: Any?) {
+        if (obj == null) return
+        if (obj is BeanFactoryAware) obj.setBeanFactory(this)
+        if (obj is ConfigurableApplicationContextAware) obj.setConfigurableApplicationContext(this)
+    }
+
     protected fun autowire(beanDefinition: BeanDefinition) = beanDefinition.also {
         if (beanDefinition.propertySet) return@also
-        val instance = beanDefinition.instanceObject
+        val instance = beanPostProcessors.fold(beanDefinition.instanceObject) { it, processor ->
+            processor.postProcessOnSetProperty(it, beanDefinition.name, this)
+        }
         for (member in beanDefinition.beanClass.memberProperties) {
             if (member !is KMutableProperty<*>) continue
             if (!member.hasAnnotation<Autowired>() && !member.hasAnnotation<Value>()) continue
@@ -179,8 +190,8 @@ open class AnnotationConfigApplicationContext(
         if (instance is InitializingBean) {
             instance.afterPropertiesSet()
         }
-        beanDefinition.proxiedObject = beanPostProcessors.fold(beanDefinition.getInstance()) { it, processor ->
-            processor.postProcessOnSetProperty(it, beanDefinition.name, this)
+        beanDefinition.instanceObject = beanPostProcessors.fold(beanDefinition.instanceObject) { it, processor ->
+            processor.postProcessAfterInitialization(it, beanDefinition.name, this)
         }
     }
 

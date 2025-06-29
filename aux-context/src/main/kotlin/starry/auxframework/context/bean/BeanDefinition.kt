@@ -16,11 +16,10 @@ class BeanDefinition(
     private val destroyMethodName: String? = null,
     private val initMethod: KFunction<*>? = null,
     private val destroyMethod: KFunction<*>? = null
-) {
+) : Comparable<BeanDefinition> {
 
-    fun getInstance() = proxiedObject ?: instanceObject
+    override fun compareTo(other: BeanDefinition) = order.compareTo(other.order)
 
-    var proxiedObject: Any? = null
     var order: Int = -1
 
     var constructed: Boolean = false
