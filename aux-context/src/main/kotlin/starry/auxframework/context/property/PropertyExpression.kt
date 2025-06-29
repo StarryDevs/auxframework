@@ -1,5 +1,7 @@
 package starry.auxframework.context.property
 
+import starry.auxframework.AuxFramework
+
 interface PropertyExpression {
 
     fun resolve(properties: PropertyResolver): Any?
@@ -41,6 +43,22 @@ class CallPropertyExpression(private val name: String, private val arguments: Li
 
     override fun toString(): String {
         return "#$name(${arguments.joinToString(", ")})"
+    }
+
+}
+
+class RunningArgumentPropertyExpression(private val index: Int) : PropertyExpression {
+
+    override fun resolve(properties: PropertyResolver): Any? {
+        if (index < 0 || index > AuxFramework.arguments.size) {
+            throw IndexOutOfBoundsException("Argument index $index is out of bounds")
+        }
+        return if (index == 0) AuxFramework.arguments
+        else AuxFramework.arguments[index - 1]
+    }
+
+    override fun toString(): String {
+        return "$$index"
     }
 
 }

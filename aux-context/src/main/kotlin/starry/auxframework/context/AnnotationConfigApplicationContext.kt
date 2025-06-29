@@ -3,6 +3,7 @@ package starry.auxframework.context
 import starry.auxframework.AuxFramework
 import starry.auxframework.context.annotation.*
 import starry.auxframework.context.bean.BeanDefinition
+import starry.auxframework.context.bean.BeanPostProcessor
 import starry.auxframework.context.bean.InitializingBean
 import starry.auxframework.context.property.PropertyResolver
 import starry.auxframework.io.ResourceResolver
@@ -42,6 +43,8 @@ open class AnnotationConfigApplicationContext(
     protected val beans = mutableMapOf<String, BeanDefinition>()
 
     val propertyResolver = PropertyResolver(Properties())
+
+    protected val beanPostProcessors = mutableListOf<BeanPostProcessor>()
 
     init {
         load()
@@ -112,7 +115,7 @@ open class AnnotationConfigApplicationContext(
         beans.putAll(beanDefinitions)
         beanDefinitions.clear()
         val dependencyList = DependencyList()
-        beans.values.forEach {
+        beans.values.sortedByDescending { it.beanClass.isSubclassOf(BeanPostProcessor::class) }.forEach {
             collectDependencies(dependencyList, it)
         }
         dependencyList.forEachIndexed { index, beanDefinition ->
@@ -133,7 +136,7 @@ open class AnnotationConfigApplicationContext(
     }
 
     private fun construct(beanDefinition: BeanDefinition): Any? {
-        if (beanDefinition.constructed) return beanDefinition.instance
+        if (beanDefinition.constructed) return beanDefinition.instanceObject
         val constructor = beanDefinition.constructor ?: return null
         val arguments = mutableMapOf<KParameter, Any?>()
         for (parameter in constructor.parameters) {
@@ -144,16 +147,22 @@ open class AnnotationConfigApplicationContext(
             else if (!parameter.isOptional) arguments[parameter] = null
         }
         val instance = constructor.callBy(arguments)
-        beanDefinition.instance = instance
+        beanDefinition.instanceObject = instance
         beanDefinition.constructed = true
         beanDefinition.getInitMethod()?.call(instance)
+        beanDefinition.proxiedObject = beanPostProcessors.fold(beanDefinition.getInstance()) { it, processor ->
+            processor.postProcessBeforeInitialization(it, beanDefinition.name, this)
+        }
+        if (beanDefinition.getInstance() is BeanPostProcessor) {
+            beanPostProcessors += beanDefinition.getInstance() as BeanPostProcessor
+        }
         autowire(beanDefinition)
-        return beanDefinition.instance
+        return beanDefinition.instanceObject
     }
 
     protected fun autowire(beanDefinition: BeanDefinition) = beanDefinition.also {
         if (beanDefinition.propertySet) return@also
-        val instance = beanDefinition.instance
+        val instance = beanDefinition.instanceObject
         for (member in beanDefinition.beanClass.memberProperties) {
             if (member !is KMutableProperty<*>) continue
             if (!member.hasAnnotation<Autowired>() && !member.hasAnnotation<Value>()) continue
@@ -163,12 +172,15 @@ open class AnnotationConfigApplicationContext(
             if (value != null || member.returnType.isMarkedNullable) {
                 member.isAccessible = true
                 member.setter.isAccessible = true
-                member.setter.call(beanDefinition.instance, value)
+                member.setter.call(beanDefinition.instanceObject, value)
             }
         }
         beanDefinition.propertySet = true
         if (instance is InitializingBean) {
             instance.afterPropertiesSet()
+        }
+        beanDefinition.proxiedObject = beanPostProcessors.fold(beanDefinition.getInstance()) { it, processor ->
+            processor.postProcessOnSetProperty(it, beanDefinition.name, this)
         }
     }
 
@@ -236,10 +248,10 @@ open class AnnotationConfigApplicationContext(
 
     override fun close() {
         this.beans.values.sortedByDescending { it.order }.forEach {
-            if (it.instance == null) return@forEach
+            if (it.instanceObject == null) return@forEach
             val method = it.getDestroyMethod() ?: return@forEach
             method.isAccessible = true
-            method.call(it.instance)
+            method.call(it.instanceObject)
         }
         beans.clear()
     }

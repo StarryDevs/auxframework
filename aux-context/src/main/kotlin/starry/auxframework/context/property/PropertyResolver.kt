@@ -62,6 +62,16 @@ class PropertyResolver(properties: Map<String, String>): MutableMap<String, Stri
     }
 
     object Converters : IBootstrap {
+
+        val toList = addConverter {
+            when (it) {
+                is Array<*> -> it.toList()
+                is Iterable<*> -> it.toList()
+                is Iterator<*> -> it.asSequence().toList()
+                else -> listOf(it)
+            }
+        }
+
         val toFile = addConverter {
             when (it) {
                 is File -> it

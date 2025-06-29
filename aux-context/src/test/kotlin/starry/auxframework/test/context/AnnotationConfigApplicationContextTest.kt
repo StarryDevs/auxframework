@@ -22,15 +22,19 @@ class AnnotationConfigApplicationContextTest {
 
     }
 
+    open class TestComponentParent {
+
+        @Value("@{user.dir}")
+        lateinit var userDir: File
+
+    }
+
     @Component
-    class TestComponent : InitializingBean {
+    class TestComponent : TestComponentParent(), InitializingBean {
 
         override fun afterPropertiesSet() {
             assertEquals(helloWorld, "Hello, world!")
         }
-
-        @Value("@{user.dir}")
-        lateinit var userDir: File
 
         @Value("Hello, world!")
         lateinit var helloWorld: String

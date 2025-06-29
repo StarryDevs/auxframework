@@ -13,7 +13,7 @@ import starry.adventure.parser.util.singleLineString
 object PropertyParser {
 
     val property: ParserSequence<PropertyExpression> = rule("property") {
-        +choose(simpleExpression, callExpression, literalExpression)
+        +choose(simpleExpression, callExpression, literalExpression, runningArgumentExpression)
     }
 
     val trueLiteral by rule {
@@ -55,6 +55,12 @@ object PropertyParser {
         require(!name.startsWith(".")) { "Function name cannot start with a dot" }
         val arguments = +property.list().optional().orElse { emptyList() }
         CallPropertyExpression(name, arguments)
+    }
+
+    val runningArgumentExpression by rule {
+        +symbol("$")
+        val index = +character { it.isDigit() }.repeat().map { it.joinToString(separator = "").toInt() }
+        RunningArgumentPropertyExpression(index)
     }
 
 }
