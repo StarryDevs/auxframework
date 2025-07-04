@@ -1,5 +1,8 @@
 package starry.auxframework.context.property
 
+import arrow.core.Option
+import starry.adventure.core.util.IWrapped
+import starry.adventure.core.util.wrapped
 import starry.adventure.parser.parse
 import starry.auxframework.util.IBootstrap
 import java.io.File
@@ -9,6 +12,7 @@ import java.nio.CharBuffer
 import java.nio.file.Path
 import java.util.*
 import kotlin.io.path.toPath
+import kotlin.jvm.optionals.getOrNull
 import kotlin.random.Random
 import kotlin.random.nextLong
 import kotlin.reflect.KClass
@@ -68,7 +72,6 @@ class PropertyResolver(properties: Map<String, String>) : MutableMap<String, Str
     }
 
     object Converters : IBootstrap {
-
         val toList = addConverter {
             when (it) {
                 is Array<*> -> it.toList()
@@ -115,9 +118,24 @@ class PropertyResolver(properties: Map<String, String>) : MutableMap<String, Str
         val toLong = addConverter { resolve<String>(it)?.toLong() }
         val toDouble = addConverter { resolve<String>(it)?.toDouble() }
         val toFloat = addConverter { resolve<String>(it)?.toFloat() }
+
+        val toWrapped = addConverter { it.wrapped() as IWrapped<*> }
     }
 
     object Functions : IBootstrap {
+
+        val unwrap = addFunction("unwrap") { args ->
+            require(args.size == 1) { "Function 'toBoolean' requires exactly one argument" }
+            return@addFunction when (val argument = args[0].resolve(this)) {
+                is IWrapped<*> -> argument.unwrap()
+                is Option<*> -> argument.getOrNull()
+                is Optional<*> -> argument.getOrNull()
+                is Result<*> -> argument.getOrNull() ?: argument.exceptionOrNull()
+                is Iterable<*> -> argument.singleOrNull()
+                else -> argument
+            }
+        }
+
         val join = addFunction("join") { args ->
             require(args.isNotEmpty()) { "Function 'join' requires at least one argument" }
             val separator = resolve<String>(args.getOrNull(0)) ?: ""
@@ -205,7 +223,6 @@ inline fun <reified T : Any> PropertyResolver.resolve(text: String) =
 
 inline fun <reified T : Any> PropertyResolver.resolve(value: Any?) =
     resolve(T::class, value)
-
 
 inline fun <reified T : Any> PropertyResolver.resolve(expression: PropertyExpression) =
     resolve(T::class, expression.resolve(this))

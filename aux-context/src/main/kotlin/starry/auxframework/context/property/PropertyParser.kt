@@ -9,7 +9,6 @@ import starry.adventure.parser.util.ParserSequence
 import starry.adventure.parser.util.rule
 import starry.adventure.parser.util.singleLineString
 
-
 object PropertyParser {
 
     val property: ParserSequence<PropertyExpression> = rule("property") {
