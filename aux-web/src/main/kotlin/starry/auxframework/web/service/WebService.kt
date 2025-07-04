@@ -9,7 +9,6 @@ import kotlinx.serialization.ExperimentalSerializationApi
 import starry.auxframework.context.ConfigurableApplicationContext
 import starry.auxframework.context.annotation.Autowired
 import starry.auxframework.context.annotation.Import
-import starry.auxframework.context.annotation.PreDestroy
 import starry.auxframework.context.annotation.stereotype.Service
 import starry.auxframework.context.bean.ApplicationListener
 import starry.auxframework.web.annotation.RequestInject
@@ -18,6 +17,7 @@ import starry.auxframework.web.annotation.RestController
 import starry.auxframework.web.configuration.ServerConfiguration
 import starry.auxframework.web.handler.*
 import java.lang.reflect.ParameterizedType
+import kotlin.concurrent.thread
 import kotlin.reflect.KClass
 import kotlin.reflect.KFunction
 import kotlin.reflect.KParameter
@@ -162,13 +162,16 @@ class WebService(
         }
     }
 
-    override fun finishLoading() {
-        if (serverConfiguration.enabled) server.start(true)
+    val serverThread = thread(start = false, name = "aux-web") {
+        start()
     }
 
-    @PreDestroy
-    fun destroy() {
-        if (serverConfiguration.enabled) server.stop()
+    override fun finishLoading() {
+        if (serverConfiguration.enabled) serverThread.start()
+    }
+
+    private fun start() {
+        server.start(wait = true)
     }
 
 }
