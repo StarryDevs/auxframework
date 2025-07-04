@@ -7,4 +7,4 @@ import java.lang.annotation.Inherited
 @Target(AnnotationTarget.VALUE_PARAMETER)
 @RequestInject
 @Inherited
-annotation class PathVariable(val name: String)
+annotation class PathVariable(val name: String = "")
