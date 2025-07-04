@@ -52,7 +52,8 @@ class ResourceResolver(private val classLoaders: Set<ClassLoader>, private val b
                 } else {
                     val path = file.toString()
                     val relativeDir = baseDir.removeHead(SEPARATOR_LEFT, SEPARATOR_RIGHT)
-                    val name = file.relativeTo(Path.of(relativeDir)).pathString.replace("\\", "/").removeHead(SEPARATOR_LEFT)
+                    val name =
+                        file.relativeTo(Path.of(relativeDir)).pathString.replace("\\", "/").removeHead(SEPARATOR_LEFT)
                     Resource("$FILE_PREFIX$path", name)
                 }
                 mapper(resource)?.let(result::add)

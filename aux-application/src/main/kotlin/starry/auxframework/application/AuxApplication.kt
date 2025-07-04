@@ -14,7 +14,13 @@ data class AuxApplicationBuilder(
     val applicationClass: KClass<*>? = null,
     val basePackages: Set<String> = emptySet(),
     val classLoaders: Set<ClassLoader> = emptySet(),
-    val context: AuxApplicationBuilder.() -> ConfigurableApplicationContext = { AnnotationConfigApplicationContext(this.applicationClass, *this.basePackages.toTypedArray(), classLoaders = this.classLoaders) }
+    val context: AuxApplicationBuilder.() -> ConfigurableApplicationContext = {
+        AnnotationConfigApplicationContext(
+            this.applicationClass,
+            *this.basePackages.toTypedArray(),
+            classLoaders = this.classLoaders
+        )
+    }
 ) {
     fun banner(banner: Banner) = copy(banner = banner)
     fun applicationClass(applicationClass: KClass<*>) = copy(applicationClass = applicationClass)

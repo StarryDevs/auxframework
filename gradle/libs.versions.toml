@@ -9,11 +9,12 @@ adventure-kt = "a00db40a98"
 adventure = "4.23.0"
 git-version = "4.0.0"
 bytebuddy = "1.17.5"
+ktor = "3.2.0"
 
 [libraries]
 kotlin-gradle-plugin = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "kotlin" }
 kotlinx-datetime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version.ref = "kotlinx-datetime" }
-kotlinx-serialization = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinx-serialization-json" }
+kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinx-serialization-json" }
 kotlinx-coroutines = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kotlinx-coroutines" }
 slf4j-api = { module = "org.slf4j:slf4j-api", version.ref = "slf4j" }
 logback-classic = { module = "ch.qos.logback:logback-classic", version.ref = "logback" }
@@ -23,11 +24,15 @@ adventure-api = { module = "net.kyori:adventure-api", version.ref = "adventure" 
 adventure-text-minimessage = { module = "net.kyori:adventure-text-minimessage", version.ref = "adventure" }
 adventure-text-serializer-ansi = { module = "net.kyori:adventure-text-serializer-ansi", version.ref = "adventure" }
 bytebuddy = { module = "net.bytebuddy:byte-buddy", version.ref = "bytebuddy" }
+ktor-server-core = { module = "io.ktor:ktor-server-core-jvm", version.ref = "ktor" }
+ktor-server-netty  = { module = "io.ktor:ktor-server-netty", version.ref = "ktor" }
+
 
 [bundles]
-kotlinx-ecosystem = ["kotlinx-datetime", "kotlinx-serialization", "kotlinx-coroutines"]
+kotlinx-ecosystem = ["kotlinx-datetime", "kotlinx-serialization-json", "kotlinx-coroutines"]
 logback = ["logback-classic", "logback-core", "slf4j-api"]
 adventure = ["adventure-text-minimessage", "adventure-text-serializer-ansi", "adventure-api"]
+ktor-server-netty = ["ktor-server-core", "ktor-server-netty"]
 
 [plugins]
 git-version = { id = "com.palantir.git-version", version.ref = "git-version" }

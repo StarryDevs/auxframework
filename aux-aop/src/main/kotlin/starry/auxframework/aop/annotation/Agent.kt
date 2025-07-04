@@ -8,4 +8,4 @@ import kotlin.reflect.KClass
 @Inherited
 @MustBeDocumented
 @Repeatable
-annotation class Agent(val type: KClass<*> = Unit::class, val name: String = "" , val order: Int = -1)
+annotation class Agent(val type: KClass<*> = Unit::class, val name: String = "", val order: Int = -1)

@@ -11,7 +11,8 @@ import kotlin.reflect.full.findAnnotation
 import kotlin.reflect.full.findAnnotations
 import kotlin.reflect.full.memberProperties
 
-abstract class AnnotationProxyBeanPostProcessor<T : Annotation> : BeanPostProcessor, ConfigurableApplicationContextAware {
+abstract class AnnotationProxyBeanPostProcessor<T : Annotation> : BeanPostProcessor,
+    ConfigurableApplicationContextAware {
 
     @Suppress("UNCHECKED_CAST")
     protected val annotationClass = (this::class.java.genericSuperclass as ParameterizedType)
@@ -25,6 +26,7 @@ abstract class AnnotationProxyBeanPostProcessor<T : Annotation> : BeanPostProces
     override fun setConfigurableApplicationContext(context: ConfigurableApplicationContext) {
         appContext = context
     }
+
     protected lateinit var appContext: ConfigurableApplicationContext
 
     @Suppress("UNCHECKED_CAST")

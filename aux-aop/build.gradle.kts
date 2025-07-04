@@ -7,7 +7,6 @@ plugins {
 
 dependencies {
     api(project(":aux-context"))
-    api(libs.bytebuddy)
 
     testImplementation(kotlin("test"))
 }

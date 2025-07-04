@@ -3,14 +3,11 @@ plugins {
     alias(libs.plugins.kotlin.plugin.serialization)
 
     `maven-publish`
-    application
 }
 
 dependencies {
     api(project(":aux-context"))
-    api(project(":aux-aop"))
-    api(project(":aux-web"))
-    api(libs.bundles.adventure)
+    api(libs.bundles.ktor.server.netty)
 
     testImplementation(kotlin("test"))
 }
@@ -19,8 +16,4 @@ configure<PublishingExtension> {
     publications.create<MavenPublication>("maven") {
         from(components.getByName("kotlin"))
     }
-}
-
-application {
-    mainClass.set("starry.auxframework.application.AuxApplicationKt")
 }

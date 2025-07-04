@@ -25,7 +25,7 @@ private fun Properties.toEnvMap() = buildMap {
     }
 }
 
-class PropertyResolver(properties: Map<String, String>): MutableMap<String, String> by properties.toMutableMap() {
+class PropertyResolver(properties: Map<String, String>) : MutableMap<String, String> by properties.toMutableMap() {
 
     companion object {
         @JvmField
@@ -35,7 +35,10 @@ class PropertyResolver(properties: Map<String, String>): MutableMap<String, Stri
         @JvmField
         val FUNCTIONS = mutableMapOf<String, PropertyResolver.(arguments: List<PropertyExpression>) -> Any?>()
 
-        fun <T> addFunction(name: String, function: PropertyResolver.(arguments: List<PropertyExpression>) -> T): PropertyResolver.(List<PropertyExpression>) -> T {
+        fun <T> addFunction(
+            name: String,
+            function: PropertyResolver.(arguments: List<PropertyExpression>) -> T
+        ): PropertyResolver.(List<PropertyExpression>) -> T {
             if (FUNCTIONS.containsKey(name)) {
                 throw IllegalArgumentException("Function '$name' is already defined")
             }
@@ -44,14 +47,17 @@ class PropertyResolver(properties: Map<String, String>): MutableMap<String, Stri
         }
 
         @Suppress("UNCHECKED_CAST")
-        fun <T : Any> addConverter(type: KClass<T>, converter: PropertyResolver.(value: Any?) -> T?): PropertyResolver.(Any?) -> T? {
+        fun <T : Any> addConverter(
+            type: KClass<T>,
+            converter: PropertyResolver.(value: Any?) -> T?
+        ): PropertyResolver.(Any?) -> T? {
             CONVERTERS[type] = CONVERTERS[type]?.let { existingConverter ->
                 { value -> converter(value) ?: existingConverter(value) }
             } ?: converter
             return CONVERTERS[type] as PropertyResolver.(Any?) -> T?
         }
 
-        inline fun <reified T: Any> addConverter(noinline converter: PropertyResolver.(value: Any?) -> T?) =
+        inline fun <reified T : Any> addConverter(noinline converter: PropertyResolver.(value: Any?) -> T?) =
             addConverter(T::class, converter)
 
         init {
@@ -131,9 +137,11 @@ class PropertyResolver(properties: Map<String, String>): MutableMap<String, Stri
 
         val cast = addFunction("cast") {
             require(it.size == 2) { "Function 'cast' requires exactly two arguments" }
-            val typeName = resolve<String>(it[0]) ?: throw IllegalArgumentException("Type name must be a non-null string")
+            val typeName =
+                resolve<String>(it[0]) ?: throw IllegalArgumentException("Type name must be a non-null string")
             val value = it[1].resolve(this)
-            val type = Functions.javaClass.classLoader.loadClass(typeName) ?: throw IllegalArgumentException("Type '$typeName' not found")
+            val type = Functions.javaClass.classLoader.loadClass(typeName)
+                ?: throw IllegalArgumentException("Type '$typeName' not found")
             resolve(type.kotlin, value)
         }
 

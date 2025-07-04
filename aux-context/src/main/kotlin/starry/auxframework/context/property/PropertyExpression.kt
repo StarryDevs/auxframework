@@ -8,7 +8,8 @@ interface PropertyExpression {
 
 }
 
-class ConstantPropertyExpression(private val value: Any?, private val raw: String = value.toString()) : PropertyExpression {
+class ConstantPropertyExpression(private val value: Any?, private val raw: String = value.toString()) :
+    PropertyExpression {
 
     override fun resolve(properties: PropertyResolver): Any? {
         return value
@@ -18,7 +19,8 @@ class ConstantPropertyExpression(private val value: Any?, private val raw: Strin
 
 }
 
-class SimplePropertyExpression(private val key: String, private val default: PropertyExpression? = null) : PropertyExpression {
+class SimplePropertyExpression(private val key: String, private val default: PropertyExpression? = null) :
+    PropertyExpression {
 
     override fun resolve(properties: PropertyResolver): Any? {
         return properties[key] ?: default?.resolve(properties)
@@ -34,7 +36,8 @@ class SimplePropertyExpression(private val key: String, private val default: Pro
 
 }
 
-class CallPropertyExpression(private val name: String, private val arguments: List<PropertyExpression>) : PropertyExpression {
+class CallPropertyExpression(private val name: String, private val arguments: List<PropertyExpression>) :
+    PropertyExpression {
 
     override fun resolve(properties: PropertyResolver): Any? {
         return properties.call(name, arguments)

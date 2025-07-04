@@ -2,16 +2,17 @@ package starry.auxframework.context
 
 import starry.auxframework.AuxFramework
 import starry.auxframework.context.annotation.*
-import starry.auxframework.context.annotation.Configuration
 import starry.auxframework.context.annotation.stereotype.Indexed
 import starry.auxframework.context.aware.BeanFactoryAware
 import starry.auxframework.context.aware.ConfigurableApplicationContextAware
+import starry.auxframework.context.bean.ApplicationListener
 import starry.auxframework.context.bean.BeanDefinition
 import starry.auxframework.context.bean.BeanPostProcessor
 import starry.auxframework.context.bean.InitializingBean
 import starry.auxframework.context.property.PropertyResolver
 import starry.auxframework.io.ResourceResolver
 import starry.auxframework.util.findAnnotation
+import starry.auxframework.util.getBeans
 import java.lang.reflect.Array
 import java.util.*
 import kotlin.reflect.KClass
@@ -55,7 +56,6 @@ open class AnnotationConfigApplicationContext(
         classes: MutableSet<KClass<*>>,
         stack: MutableList<KClass<*>> = mutableListOf()
     ) {
-        if (annotated in stack) throw IllegalStateException("Circular import detected: ${stack.joinToString(" -> ") { it.jvmName }} -> ${annotated.jvmName}")
         stack += annotated
         val import = findAnnotation(annotated, Import::class) ?: return
         import.classes.forEach { collectImports(it, classes, stack) }
@@ -66,6 +66,7 @@ open class AnnotationConfigApplicationContext(
     override fun load() {
         if (loaded) return
         loaded = true
+        registerSingleton(this)
         val beanDefinitions = mutableMapOf<String, BeanDefinition>()
         val beanClasses = mutableSetOf<KClass<*>>()
         if (applicationClass != null) beanClasses += applicationClass
@@ -133,6 +134,7 @@ open class AnnotationConfigApplicationContext(
         }
         construct(configurations)
         construct(nonConfigurations)
+        getBeans<ApplicationListener>().forEach(ApplicationListener::finishLoading)
     }
 
     protected fun construct(beans: Set<BeanDefinition>) {
@@ -197,7 +199,7 @@ open class AnnotationConfigApplicationContext(
         }
     }
 
-    protected fun autowire(type: KClass<*>, annotations: List<Annotation>): Any? {
+    override fun autowire(type: KClass<*>, annotations: List<Annotation>): Any? {
         val valueAnnotation = annotations.find { it is Value } as? Value?
         val qualifierAnnotation = annotations.find { it is Qualifier } as? Qualifier?
         if (valueAnnotation != null) {
@@ -208,7 +210,8 @@ open class AnnotationConfigApplicationContext(
         } else {
             if (type.java.isArray) {
                 val componentType = type.java.componentType.kotlin
-                val beans = if (qualifierAnnotation == null) findBeanDefinitions(componentType).map(::construct) else emptySet()
+                val beans =
+                    if (qualifierAnnotation == null) findBeanDefinitions(componentType).map(::construct) else emptySet()
                 val array = Array.newInstance(componentType.java, beans.size)
                 if (qualifierAnnotation != null) {
                     Array.set(array, 0, getBean(qualifierAnnotation.name))
@@ -218,7 +221,11 @@ open class AnnotationConfigApplicationContext(
                 return array
             }
             val bean =
-                runCatching { if (qualifierAnnotation != null) findBeanDefinition(qualifierAnnotation.name) else findBeanDefinition(type) }.getOrNull()
+                runCatching {
+                    if (qualifierAnnotation != null) findBeanDefinition(qualifierAnnotation.name) else findBeanDefinition(
+                        type
+                    )
+                }.getOrNull()
             return bean?.let { construct(it) }
         }
     }
@@ -267,6 +274,15 @@ open class AnnotationConfigApplicationContext(
             method.call(it.instanceObject)
         }
         beans.clear()
+    }
+
+    override fun registerSingleton(singleton: Any, name: String?) {
+        val beanName = name ?: singleton::class.jvmName
+        require(singleton !in beans) { "Duplicate bean name: $name" }
+        val beanDefinition = BeanDefinition(beanName, singleton::class, singleton)
+        beanDefinition.constructed = true
+        beanDefinition.propertySet = true
+        beans[beanName] = beanDefinition
     }
 
 }

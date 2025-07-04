@@ -36,11 +36,12 @@ abstract class ConfigurableApplicationContext : BeanFactory {
     override fun containsBean(type: KClass<*>) = findBeanDefinition(type) != null
 
     @Suppress("UNCHECKED_CAST")
-    override fun <T : Any> getBean(name: String): T
-        = findBeanDefinition(name)?.instanceObject as? T ?: throw IllegalArgumentException("No bean found with name: $name")
+    override fun <T : Any> getBean(name: String): T = findBeanDefinition(name)?.instanceObject as? T
+        ?: throw IllegalArgumentException("No bean found with name: $name")
 
     @Suppress("UNCHECKED_CAST")
-    override fun <T : Any> getBeans(type: KClass<T>) = findBeanDefinitions(type).mapNotNull { it.instanceObject as? T }.toSet()
+    override fun <T : Any> getBeans(type: KClass<T>) =
+        findBeanDefinitions(type).mapNotNull { it.instanceObject as? T }.toSet()
 
     override fun <T : Any> getBean(type: KClass<T>): T = getBeans(type).single()
 

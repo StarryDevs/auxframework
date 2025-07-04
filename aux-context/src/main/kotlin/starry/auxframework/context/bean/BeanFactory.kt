@@ -44,6 +44,19 @@ interface BeanFactory : AutoCloseable {
      */
     fun containsBean(type: KClass<*>): Boolean
 
+    /**
+     * 创建单例对象 Bean
+     *
+     * @param singleton 单例对象
+     * @param name Bean 名称 (选填，默认自动生成)
+     */
+    fun registerSingleton(singleton: Any, name: String? = null)
+
+    /**
+     * 自动填充
+     */
+    fun autowire(type: KClass<*>, annotations: List<Annotation>): Any?
+
     override fun close()
 
 }

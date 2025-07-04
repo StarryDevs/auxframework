@@ -1,6 +1,5 @@
 import com.palantir.gradle.gitversion.VersionDetails
-import org.gradle.kotlin.dsl.invoke
-import java.util.Date
+import java.util.*
 
 plugins {
     id("build.convention.kotlin-jvm")
@@ -14,6 +13,7 @@ dependencies {
     api(libs.bundles.kotlinx.ecosystem)
     api(libs.bundles.logback)
     api(libs.adventure.parser)
+    api(libs.bytebuddy)
 
     testImplementation(kotlin("test"))
 }

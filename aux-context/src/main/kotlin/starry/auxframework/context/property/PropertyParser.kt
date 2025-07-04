@@ -51,7 +51,8 @@ object PropertyParser {
 
     val callExpression by rule {
         +symbol("#")
-        val name = +character { it.isJavaIdentifierPart() || it == '.' }.repeat().map { it.joinToString(separator = "") }
+        val name =
+            +character { it.isJavaIdentifierPart() || it == '.' }.repeat().map { it.joinToString(separator = "") }
         require(!name.startsWith(".")) { "Function name cannot start with a dot" }
         val arguments = +property.list().optional().orElse { emptyList() }
         CallPropertyExpression(name, arguments)

@@ -27,11 +27,13 @@ class BeanDefinition(
 
     fun getInitMethod(): KFunction<*>? = initMethod
         ?: initMethodName?.let { name -> beanClass.members.firstOrNull { it.name == name } as? KFunction<*> }
-        ?: (instanceObject?.let { it::class } ?: beanClass).members.firstOrNull { it.hasAnnotation<PostConstruct>() } as? KFunction<*>
+        ?: (instanceObject?.let { it::class }
+            ?: beanClass).members.firstOrNull { it.hasAnnotation<PostConstruct>() } as? KFunction<*>
 
     fun getDestroyMethod(): KFunction<*>? = destroyMethod
         ?: destroyMethodName?.let { name -> beanClass.members.firstOrNull { it.name == name } as? KFunction<*> }
-        ?: (instanceObject?.let { it::class } ?: beanClass).members.firstOrNull { it.hasAnnotation<PreDestroy>() } as? KFunction<*>
+        ?: (instanceObject?.let { it::class }
+            ?: beanClass).members.firstOrNull { it.hasAnnotation<PreDestroy>() } as? KFunction<*>
 
     override fun hashCode() = name.hashCode()
     override fun equals(other: Any?) = other != null && other is BeanDefinition && other.name == name
