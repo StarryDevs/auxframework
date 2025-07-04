@@ -61,8 +61,10 @@ class AuxApplication(private val builder: AuxApplicationBuilder = AuxApplication
         val applicationProperties = AuxApplication::class.readResourceAsStream("/application.properties")
             ?.let { Properties().apply { load(it) } }
         if (applicationProperties != null) {
-            map += applicationProperties.stringPropertyNames().map {
-                it to applicationProperties.getProperty(it)
+            for (key in applicationProperties.stringPropertyNames()) {
+                if (key in map) continue
+                val value = applicationProperties.getProperty(key)
+                map[key] = value
             }
         }
     }
