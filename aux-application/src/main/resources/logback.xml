@@ -2,11 +2,11 @@
 <configuration>
     <conversionRule conversionWord="auxColoredLoggingLevel"
                     class="starry.auxframework.logging.logback.LoggingLevelConverter"/>
-    <conversionRule conversionWord="auxRainbowLoggerName"
-                    class="starry.auxframework.logging.logback.RainbowConverter"/>
+    <conversionRule conversionWord="auxAppName"
+                    class="starry.auxframework.logging.logback.AppNameConverter"/>
 
     <property name="CONSOLE_LOG_PATTERN"
-              value="%cyan(%d{yyyy-MM-dd HH:mm:ss.SSS}) %green([%thread]) %auxColoredLoggingLevel %boldBlue(%logger{36}) - %boldYellow(%msg%n)"/>
+              value="%cyan(%d{yyyy-MM-dd HH:mm:ss.SSS}) %green([%thread]) %auxAppName %auxColoredLoggingLevel %boldBlue(%logger{36}) - %boldYellow(%msg%n)"/>
 
     <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
         <encoder charset="UTF-8">

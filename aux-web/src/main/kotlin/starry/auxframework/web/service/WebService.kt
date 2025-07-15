@@ -51,7 +51,6 @@ class WebService(
     @Autowired
     private lateinit var requestInjectProcessors: Array<IRequestInjectProcessor<*>>
 
-
     @OptIn(ExperimentalSerializationApi::class)
     val server: EmbeddedWebServer = embeddedServer(
         Netty,
@@ -85,17 +84,14 @@ class WebService(
         return route
     }
 
-    private suspend fun RoutingContext.handleRequest(restController: Any, method: KFunction<*>) {
-        val context = object : IRoutingContext {
-            override val call: RoutingCall = this@handleRequest.call
-        }
-        routingContextHandler.context.set(context)
+    private suspend fun IRoutingContext.handleRequest(restController: Any, method: KFunction<*>) {
+        routingContextHandler.context.set(this)
 
         val arguments = mutableMapOf<KParameter, Any?>()
         for (parameter in method.parameters) {
             if (parameter.kind == KParameter.Kind.INSTANCE) arguments[parameter] = restController
             else if (parameter.annotations.any { it.annotationClass.hasAnnotation<RequestInject>() || it is RequestInject }) {
-                val result = processRequestInject(parameter, context)?.let {
+                val result = processRequestInject(parameter, this)?.let {
                     propertyResolver.resolve(
                         parameter.type.classifier as KClass<*>,
                         it
@@ -108,7 +104,7 @@ class WebService(
 
         val response = method.callSuspendBy(arguments)
         if (response != null && response != Unit) {
-            processResponse(response, context)
+            processResponse(response, this)
         }
 
         routingContextHandler.context.remove()
@@ -154,7 +150,10 @@ class WebService(
                 for (httpMethod in methods) {
                     method(httpMethod) {
                         handle {
-                            handleRequest(restController, method)
+                            val context = object : IRoutingContext {
+                                override val call: RoutingCall = this@handle.call
+                            }
+                            context.handleRequest(restController, method)
                         }
                     }
                 }

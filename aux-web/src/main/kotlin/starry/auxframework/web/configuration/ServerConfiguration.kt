@@ -5,7 +5,7 @@ import starry.auxframework.context.annotation.Value
 
 @Configuration
 class ServerConfiguration(
-    @Value("@{server.enabled:true}") val enabled: Boolean,
-    @Value("@{server.port:\"8080\"}") val port: Int,
-    @Value("@{server.hostname:\"localhost\"}") val hostname: String,
+    @Value("@{server.enabled:true}") var enabled: Boolean,
+    @Value("@{server.port:\"8080\"}") var port: Int,
+    @Value("@{server.hostname:\"localhost\"}") var hostname: String,
 )
