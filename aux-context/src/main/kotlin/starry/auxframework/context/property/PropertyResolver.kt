@@ -4,6 +4,7 @@ import arrow.core.Option
 import starry.adventure.core.util.IWrapped
 import starry.adventure.core.util.wrapped
 import starry.adventure.parser.parse
+import starry.auxframework.context.bean.BeanFactory
 import starry.auxframework.util.IBootstrap
 import java.io.File
 import java.net.URI
@@ -29,7 +30,7 @@ private fun Properties.toEnvMap() = buildMap {
     }
 }
 
-class PropertyResolver(properties: Map<String, String>) : MutableMap<String, String> by properties.toMutableMap() {
+class PropertyResolver(val beanFactory: BeanFactory, properties: Map<String, String>) : MutableMap<String, String> by properties.toMutableMap() {
 
     companion object {
         @JvmField
@@ -124,6 +125,17 @@ class PropertyResolver(properties: Map<String, String>) : MutableMap<String, Str
 
     object Functions : IBootstrap {
 
+        val bean = addFunction("bean") { args ->
+            require(args.size == 1) { "Function 'bean' requires exactly one argument" }
+            val result = args[0].resolve(this)
+            when (result) {
+                null -> null
+                is KClass<*> -> beanFactory.getBean(result)
+                is Class<*> -> beanFactory.getBean(result.kotlin)
+                else -> resolve<String>(result)?.let { beanFactory.getBean(it) }
+            }
+        }
+
         val unwrap = addFunction("unwrap") { args ->
             require(args.size == 1) { "Function 'toBoolean' requires exactly one argument" }
             return@addFunction when (val argument = args[0].resolve(this)) {
@@ -198,7 +210,7 @@ class PropertyResolver(properties: Map<String, String>) : MutableMap<String, Str
 
     }
 
-    constructor(properties: Properties) : this(properties.toEnvMap())
+    constructor(beanFactory: BeanFactory, properties: Properties) : this(beanFactory, properties.toEnvMap())
 
     fun <T : Any> resolve(type: KClass<T>, value: Any?): T? {
         return if (type.isInstance(value)) type.cast(value)

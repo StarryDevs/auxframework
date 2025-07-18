@@ -47,7 +47,7 @@ open class AnnotationConfigApplicationContext(
 
     protected val beans = mutableMapOf<String, BeanDefinition>()
 
-    override val propertyResolver = PropertyResolver(Properties())
+    override val propertyResolver = PropertyResolver(this, Properties())
 
     protected val beanPostProcessors = mutableListOf<BeanPostProcessor>()
 
