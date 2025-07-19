@@ -119,7 +119,6 @@ class PropertyResolver(val beanFactory: BeanFactory, properties: Map<String, Str
         val toLong = addConverter { resolve<String>(it)?.toLong() }
         val toDouble = addConverter { resolve<String>(it)?.toDouble() }
         val toFloat = addConverter { resolve<String>(it)?.toFloat() }
-
         val toWrapped = addConverter { it.wrapped() as IWrapped<*> }
     }
 

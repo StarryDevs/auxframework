@@ -10,6 +10,7 @@ import starry.auxframework.context.bean.BeanDefinition
 import starry.auxframework.context.bean.BeanPostProcessor
 import starry.auxframework.context.bean.InitializingBean
 import starry.auxframework.context.property.PropertyResolver
+import starry.auxframework.context.property.validation.Validator
 import starry.auxframework.io.ResourceResolver
 import starry.auxframework.util.findAnnotation
 import starry.auxframework.util.getBeans
@@ -183,7 +184,11 @@ open class AnnotationConfigApplicationContext(
             if (!member.hasAnnotation<Autowired>() && !member.hasAnnotation<Value>()) continue
             val type = member.returnType.classifier as? KClass<*> ?: continue
             val annotations = member.annotations
-            val value = autowire(type, annotations)
+            val value = try {
+                autowire(type, annotations)
+            } catch (exception: Throwable) {
+                throw IllegalStateException("Unable to autowire '${member.name}' of ${beanDefinition.name}", exception)
+            }
             if (value != null || member.returnType.isMarkedNullable) {
                 member.isAccessible = true
                 member.setter.isAccessible = true
@@ -202,11 +207,32 @@ open class AnnotationConfigApplicationContext(
     override fun autowire(type: KClass<*>, annotations: List<Annotation>): Any? {
         val valueAnnotation = annotations.find { it is Value } as? Value?
         val qualifierAnnotation = annotations.find { it is Qualifier } as? Qualifier?
+        val validators = annotations
+            .mapNotNull { annotation ->
+                annotation.annotationClass.findAnnotation<Validated>()?.let { annotation to it }
+            }
+            .groupBy { it.second.validator }
+            .mapValues { it.value.map { (first) -> first } }
+            .mapKeys { (key) -> key.objectInstance ?: key.createInstance() }
+        @Suppress("UNCHECKED_CAST")
+        fun check(value: Any?) = value.also {
+            for ((validator, annotations) in validators) {
+                val validator = validator as Validator<Annotation>
+                for (annotation in annotations) {
+                    validator.validate(value, annotation, propertyResolver)
+                }
+            }
+        }
         if (valueAnnotation != null) {
             val text = valueAnnotation.expression
-            val expression = propertyResolver.parse(text)
-            val value = propertyResolver.resolve(type, expression.resolve(propertyResolver))
-            return value
+            if (valueAnnotation.isRaw) {
+                val value = propertyResolver.resolve(type, text)
+                return check(value)
+            } else {
+                val expression = propertyResolver.parse(text)
+                val value = propertyResolver.resolve(type, expression.resolve(propertyResolver))
+                return check(value)
+            }
         } else {
             if (type.java.isArray) {
                 val componentType = type.java.componentType.kotlin
@@ -218,15 +244,14 @@ open class AnnotationConfigApplicationContext(
                 } else {
                     beans.forEachIndexed { index, value -> Array.set(array, index, value) }
                 }
-                return array
+                return check(array)
             }
-            val bean =
-                runCatching {
-                    if (qualifierAnnotation != null) findBeanDefinition(qualifierAnnotation.name) else findBeanDefinition(
-                        type
-                    )
-                }.getOrNull()
-            return bean?.let { construct(it) }
+            val bean = runCatching {
+                if (qualifierAnnotation != null)
+                    findBeanDefinition(qualifierAnnotation.name)
+                else findBeanDefinition(type)
+            }.getOrNull()?.let { construct(it) }
+            return check(bean)
         }
     }
 
