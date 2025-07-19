@@ -30,7 +30,8 @@ private fun Properties.toEnvMap() = buildMap {
     }
 }
 
-class PropertyResolver(val beanFactory: BeanFactory, properties: Map<String, String>) : MutableMap<String, String> by properties.toMutableMap() {
+class PropertyResolver(val beanFactory: BeanFactory, properties: Map<String, String>) :
+    MutableMap<String, String> by properties.toMutableMap() {
 
     companion object {
         @JvmField

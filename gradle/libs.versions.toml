@@ -24,7 +24,7 @@ adventure-text-minimessage = { module = "net.kyori:adventure-text-minimessage", 
 adventure-text-serializer-ansi = { module = "net.kyori:adventure-text-serializer-ansi", version.ref = "adventure" }
 bytebuddy = { module = "net.bytebuddy:byte-buddy", version.ref = "bytebuddy" }
 ktor-server-core = { module = "io.ktor:ktor-server-core-jvm", version.ref = "ktor" }
-ktor-server-netty  = { module = "io.ktor:ktor-server-netty", version.ref = "ktor" }
+ktor-server-netty = { module = "io.ktor:ktor-server-netty", version.ref = "ktor" }
 
 [bundles]
 kotlinx-ecosystem = ["kotlinx-datetime", "kotlinx-serialization-json", "kotlinx-coroutines"]

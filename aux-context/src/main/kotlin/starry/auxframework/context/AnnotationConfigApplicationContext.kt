@@ -214,6 +214,7 @@ open class AnnotationConfigApplicationContext(
             .groupBy { it.second.validator }
             .mapValues { it.value.map { (first) -> first } }
             .mapKeys { (key) -> key.objectInstance ?: key.createInstance() }
+
         @Suppress("UNCHECKED_CAST")
         fun check(value: Any?) = value.also {
             for ((validator, annotations) in validators) {

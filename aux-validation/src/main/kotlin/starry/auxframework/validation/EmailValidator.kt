@@ -61,6 +61,7 @@ object EmailValidator : Validator<Email> {
                     if (index == 0 || index == local.length - 1 || lastChar == '.') return false
                     dotCount++
                 }
+
                 else -> return false  // 非法字符
             }
             lastChar = char
@@ -150,7 +151,7 @@ object EmailValidator : Validator<Email> {
                 emptyCount++
                 continue
             }
-            if (!group.all { it in '0' .. '9' || it in 'a' .. 'f' || it in 'A' .. 'F' }) return false
+            if (!group.all { it in '0'..'9' || it in 'a'..'f' || it in 'A'..'F' }) return false
             if (group.length > 4) return false
         }
 

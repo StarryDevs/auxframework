@@ -3,11 +3,7 @@ package starry.auxframework.test.validation
 import org.junit.jupiter.api.assertDoesNotThrow
 import starry.auxframework.context.AnnotationConfigApplicationContext
 import starry.auxframework.context.annotation.Value
-import starry.auxframework.validation.annotation.Email
-import starry.auxframework.validation.annotation.IsInstance
-import starry.auxframework.validation.annotation.Pattern
-import starry.auxframework.validation.annotation.Range
-import starry.auxframework.validation.annotation.Size
+import starry.auxframework.validation.annotation.*
 import kotlin.test.Test
 
 class ValidationTests {

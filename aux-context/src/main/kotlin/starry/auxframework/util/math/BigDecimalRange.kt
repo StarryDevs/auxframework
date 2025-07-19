@@ -11,7 +11,12 @@ import kotlin.reflect.jvm.jvmName
  * @param includeMin 是否包含下限
  * @param includeMax 是否包含上限
  */
-class BigDecimalRange(val min: BigDecimal?, val max: BigDecimal?, val includeMin: Boolean = true, val includeMax: Boolean = true) {
+class BigDecimalRange(
+    val min: BigDecimal?,
+    val max: BigDecimal?,
+    val includeMin: Boolean = true,
+    val includeMax: Boolean = true
+) {
 
     object Parser : AbstractParser<BigDecimalRange>() {
 
