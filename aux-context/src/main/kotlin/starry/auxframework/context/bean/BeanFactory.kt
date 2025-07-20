@@ -1,5 +1,6 @@
 package starry.auxframework.context.bean
 
+import starry.auxframework.context.property.AutowireOptions
 import kotlin.reflect.KClass
 
 interface BeanFactory : AutoCloseable {
@@ -55,7 +56,7 @@ interface BeanFactory : AutoCloseable {
     /**
      * 自动填充
      */
-    fun autowire(type: KClass<*>, annotations: List<Annotation>): Any?
+    fun autowire(type: KClass<*>, annotations: List<Annotation>, autowireOptions: AutowireOptions = AutowireOptions()): Any?
 
     override fun close()
 

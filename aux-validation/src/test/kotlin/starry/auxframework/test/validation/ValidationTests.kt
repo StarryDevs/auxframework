@@ -27,16 +27,17 @@ class ValidationTests {
         var size: String? = null
 
         @Range("[0, 2]")
-        @Value("2", isRaw = true)
-        var range: String? = null
+        var range: Int = 2
 
     }
 
     @Test
     fun test() {
         assertDoesNotThrow {
-            val ctx = AnnotationConfigApplicationContext(ValidationTester::class, this::class.java.packageName)
-            ctx.load()
+            AnnotationConfigApplicationContext(
+                ValidationTester::class,
+                this::class.java.packageName
+            ).load()
         }
     }
 

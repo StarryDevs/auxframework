@@ -1,6 +1,7 @@
 package starry.auxframework.context.property
 
 import kotlinx.serialization.json.Json
+import starry.adventure.parser.Parser
 import starry.adventure.parser.character
 import starry.adventure.parser.map
 import starry.adventure.parser.operator.*
@@ -11,8 +12,12 @@ import starry.adventure.parser.util.singleLineString
 
 object PropertyParser {
 
+    val properties: MutableSet<out Parser<out PropertyExpression>> by lazy {
+        mutableSetOf(simpleExpression, callExpression, literalExpression, runningArgumentExpression)
+    }
+
     val property: ParserSequence<PropertyExpression> = rule("property") {
-        +choose(simpleExpression, callExpression, literalExpression, runningArgumentExpression)
+        +choose(*properties.toTypedArray())
     }
 
     val trueLiteral by rule {

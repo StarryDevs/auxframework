@@ -9,6 +9,7 @@ import starry.auxframework.context.bean.ApplicationListener
 import starry.auxframework.context.bean.BeanDefinition
 import starry.auxframework.context.bean.BeanPostProcessor
 import starry.auxframework.context.bean.InitializingBean
+import starry.auxframework.context.property.AutowireOptions
 import starry.auxframework.context.property.PropertyResolver
 import starry.auxframework.context.property.validation.Validator
 import starry.auxframework.io.ResourceResolver
@@ -16,11 +17,8 @@ import starry.auxframework.util.findAnnotation
 import starry.auxframework.util.getBeans
 import java.lang.reflect.Array
 import java.util.*
-import kotlin.reflect.KClass
-import kotlin.reflect.KMutableProperty
-import kotlin.reflect.KParameter
+import kotlin.reflect.*
 import kotlin.reflect.full.*
-import kotlin.reflect.javaType
 import kotlin.reflect.jvm.isAccessible
 import kotlin.reflect.jvm.jvmName
 
@@ -174,18 +172,23 @@ open class AnnotationConfigApplicationContext(
         if (obj is ConfigurableApplicationContextAware) obj.setConfigurableApplicationContext(this)
     }
 
+    @Suppress("UNCHECKED_CAST")
     protected fun autowire(beanDefinition: BeanDefinition) = beanDefinition.also {
         if (beanDefinition.propertySet) return@also
         val instance = beanPostProcessors.fold(beanDefinition.instanceObject) { it, processor ->
             processor.postProcessOnSetProperty(it, beanDefinition.name, this)
         }
+        val enableValidation = beanDefinition.beanClass.findAnnotation<EnableValidation>()
         for (member in beanDefinition.beanClass.memberProperties) {
             if (member !is KMutableProperty<*>) continue
             if (!member.hasAnnotation<Autowired>() && !member.hasAnnotation<Value>()) continue
             val type = member.returnType.classifier as? KClass<*> ?: continue
             val annotations = member.annotations
             val value = try {
-                autowire(type, annotations)
+                val options = AutowireOptions(
+                    enableValidation = enableValidation?.enabled != false
+                )
+                autowire(type, annotations, options)
             } catch (exception: Throwable) {
                 throw IllegalStateException("Unable to autowire '${member.name}' of ${beanDefinition.name}", exception)
             }
@@ -202,28 +205,32 @@ open class AnnotationConfigApplicationContext(
         beanDefinition.instanceObject = beanPostProcessors.fold(beanDefinition.instanceObject) { it, processor ->
             processor.postProcessAfterInitialization(it, beanDefinition.name, this)
         }
-    }
-
-    override fun autowire(type: KClass<*>, annotations: List<Annotation>): Any? {
-        val valueAnnotation = annotations.find { it is Value } as? Value?
-        val qualifierAnnotation = annotations.find { it is Qualifier } as? Qualifier?
-        val validators = annotations
-            .mapNotNull { annotation ->
-                annotation.annotationClass.findAnnotation<Validated>()?.let { annotation to it }
-            }
-            .groupBy { it.second.validator }
-            .mapValues { it.value.map { (first) -> first } }
-            .mapKeys { (key) -> key.objectInstance ?: key.createInstance() }
-
-        @Suppress("UNCHECKED_CAST")
-        fun check(value: Any?) = value.also {
-            for ((validator, annotations) in validators) {
-                val validator = validator as Validator<Annotation>
-                for (annotation in annotations) {
-                    validator.validate(value, annotation, propertyResolver)
+        if (enableValidation?.enabled != false && beanDefinition.instanceObject != null) {
+            for (member in beanDefinition.instanceObject!!::class.memberProperties) {
+                val memberEnableValidation = member.findAnnotation<EnableValidation>()?.enabled != false
+                if (!memberEnableValidation) continue
+                val validators = Validator.fromAnnotations(member.annotations)
+                try {
+                    val member = member as KProperty1<Any?, Any>
+                    val value = member.get(beanDefinition.instanceObject)
+                    Validator.check(value, validators, propertyResolver)
+                } catch (exception: Throwable) {
+                    throw IllegalStateException("Validation failed for property '${member.name}' of bean '${beanDefinition.name}'", exception)
                 }
             }
         }
+    }
+
+    override fun autowire(type: KClass<*>, annotations: List<Annotation>, autowireOptions: AutowireOptions): Any? {
+        val valueAnnotation = annotations.find { it is Value } as? Value?
+        val qualifierAnnotation = annotations.find { it is Qualifier } as? Qualifier?
+        val validators = Validator.fromAnnotations(annotations)
+
+        @Suppress("UNCHECKED_CAST")
+        fun check(value: Any?) = value.also {
+            Validator.check(value, validators, propertyResolver)
+        }
+
         if (valueAnnotation != null) {
             val text = valueAnnotation.expression
             if (valueAnnotation.isRaw) {

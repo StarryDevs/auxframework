@@ -8,9 +8,11 @@ import io.ktor.server.routing.*
 import kotlinx.serialization.ExperimentalSerializationApi
 import starry.auxframework.context.ConfigurableApplicationContext
 import starry.auxframework.context.annotation.Autowired
+import starry.auxframework.context.annotation.EnableValidation
 import starry.auxframework.context.annotation.Import
 import starry.auxframework.context.annotation.stereotype.Service
 import starry.auxframework.context.bean.ApplicationListener
+import starry.auxframework.context.property.validation.Validator
 import starry.auxframework.web.annotation.RequestInject
 import starry.auxframework.web.annotation.RequestMapping
 import starry.auxframework.web.annotation.RestController
@@ -88,6 +90,8 @@ class WebService(
         routingContextHandler.context.set(this)
 
         val arguments = mutableMapOf<KParameter, Any?>()
+        val enableValidation = restController::class.findAnnotation<EnableValidation>()?.enabled != false &&
+                method.findAnnotation<EnableValidation>()?.enabled != false
         for (parameter in method.parameters) {
             if (parameter.kind == KParameter.Kind.INSTANCE) arguments[parameter] = restController
             else if (parameter.annotations.any { it.annotationClass.hasAnnotation<RequestInject>() || it is RequestInject }) {
@@ -97,6 +101,8 @@ class WebService(
                         it
                     )
                 }
+                if (enableValidation) Validator
+                    .check(result, Validator.fromAnnotations(parameter.annotations), propertyResolver)
                 if (result != null || !parameter.isOptional) arguments[parameter] = result
             } else arguments[parameter] =
                 beanFactory.autowire(parameter.type.classifier as KClass<*>, parameter.annotations)
