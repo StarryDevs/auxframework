@@ -179,16 +179,15 @@ open class AnnotationConfigApplicationContext(
         val instance = beanPostProcessors.fold(beanDefinition.instanceObject) { it, processor ->
             processor.postProcessOnSetProperty(it, beanDefinition.name, this)
         }
-        val enableValidation = beanDefinition.beanClass.findAnnotation<EnableValidation>()
+        val enableValidation = beanDefinition.beanClass.findAnnotation<EnableValidation>()?.enabled != false
+                && beanDefinition.constructor?.findAnnotation<EnableValidation>()?.enabled != false
         for (member in beanDefinition.beanClass.memberProperties) {
             if (member !is KMutableProperty<*>) continue
             if (!member.hasAnnotation<Autowired>() && !member.hasAnnotation<Value>()) continue
             val type = member.returnType.classifier as? KClass<*> ?: continue
             val annotations = member.annotations
             val value = try {
-                val options = AutowireOptions(
-                    enableValidation = enableValidation?.enabled != false
-                )
+                val options = AutowireOptions(enableValidation = enableValidation)
                 autowire(type, annotations, options)
             } catch (exception: Throwable) {
                 throw IllegalStateException("Unable to autowire '${member.name}' of ${beanDefinition.name}", exception)
@@ -206,7 +205,7 @@ open class AnnotationConfigApplicationContext(
         beanDefinition.instanceObject = beanPostProcessors.fold(beanDefinition.instanceObject) { it, processor ->
             processor.postProcessAfterInitialization(it, beanDefinition.name, this)
         }
-        if (enableValidation?.enabled != false && beanDefinition.instanceObject != null) {
+        if (enableValidation && beanDefinition.instanceObject != null) {
             for (member in beanDefinition.instanceObject!!::class.memberProperties) {
                 val memberEnableValidation = member.findAnnotation<EnableValidation>()?.enabled != false
                 if (!memberEnableValidation) continue
