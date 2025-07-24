@@ -11,6 +11,7 @@ import starry.auxframework.context.bean.BeanPostProcessor
 import starry.auxframework.context.bean.InitializingBean
 import starry.auxframework.context.property.AutowireOptions
 import starry.auxframework.context.property.PropertyResolver
+import starry.auxframework.context.property.validation.ValidationException
 import starry.auxframework.context.property.validation.Validator
 import starry.auxframework.io.ResourceResolver
 import starry.auxframework.util.findAnnotation
@@ -212,9 +213,10 @@ open class AnnotationConfigApplicationContext(
                 val validators = Validator.fromAnnotations(member.annotations)
                 try {
                     val member = member as KProperty1<Any?, Any>
+                    member.isAccessible = true
                     val value = member.get(beanDefinition.instanceObject)
                     Validator.check(value, validators, propertyResolver)
-                } catch (exception: Throwable) {
+                } catch (exception: ValidationException) {
                     throw IllegalStateException("Validation failed for property '${member.name}' of bean '${beanDefinition.name}'", exception)
                 }
             }
