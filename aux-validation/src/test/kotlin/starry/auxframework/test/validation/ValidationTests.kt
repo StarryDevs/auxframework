@@ -2,12 +2,14 @@ package starry.auxframework.test.validation
 
 import org.junit.jupiter.api.assertDoesNotThrow
 import starry.auxframework.context.AnnotationConfigApplicationContext
+import starry.auxframework.context.annotation.EnableValidation
 import starry.auxframework.context.annotation.Value
 import starry.auxframework.validation.annotation.*
 import kotlin.test.Test
 
 class ValidationTests {
 
+    @EnableValidation
     class ValidationTester {
 
         @Email(nullable = true)

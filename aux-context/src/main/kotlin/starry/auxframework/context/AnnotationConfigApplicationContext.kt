@@ -144,11 +144,16 @@ open class AnnotationConfigApplicationContext(
     private fun construct(beanDefinition: BeanDefinition): Any? {
         if (beanDefinition.constructed) return beanDefinition.instanceObject
         val constructor = beanDefinition.constructor ?: return null
+        val enableValidation = (constructor.findAnnotation<EnableValidation>()?.enabled)
+            ?: (beanDefinition.beanClass.findAnnotation<EnableValidation>()?.enabled == true)
         val arguments = mutableMapOf<KParameter, Any?>()
         for (parameter in constructor.parameters) {
             val type = parameter.type.classifier as KClass<*>
             val annotations = parameter.annotations
-            val value = autowire(type, annotations)
+            val autowireOptions = AutowireOptions(
+                enableValidation = enableValidation
+            )
+            val value = autowire(type, annotations, autowireOptions)
             if (value != null) arguments[parameter] = value
             else if (!parameter.isOptional) arguments[parameter] = null
         }
@@ -179,8 +184,7 @@ open class AnnotationConfigApplicationContext(
         val instance = beanPostProcessors.fold(beanDefinition.instanceObject) { it, processor ->
             processor.postProcessOnSetProperty(it, beanDefinition.name, this)
         }
-        val enableValidation = beanDefinition.beanClass.findAnnotation<EnableValidation>()?.enabled != false
-                && beanDefinition.constructor?.findAnnotation<EnableValidation>()?.enabled != false
+        val enableValidation = beanDefinition.beanClass.findAnnotation<EnableValidation>()?.enabled == true
         for (member in beanDefinition.beanClass.memberProperties) {
             if (member !is KMutableProperty<*>) continue
             if (!member.hasAnnotation<Autowired>() && !member.hasAnnotation<Value>()) continue
