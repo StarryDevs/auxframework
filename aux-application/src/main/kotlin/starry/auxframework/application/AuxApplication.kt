@@ -5,6 +5,7 @@ import starry.auxframework.context.AnnotationConfigApplicationContext
 import starry.auxframework.context.ConfigurableApplicationContext
 import starry.auxframework.util.getLogger
 import starry.auxframework.util.readResourceAsStream
+import java.io.File
 import java.util.*
 import kotlin.reflect.KClass
 import kotlin.time.measureTime
@@ -59,13 +60,26 @@ class AuxApplication(private val builder: AuxApplicationBuilder = AuxApplication
 
     private fun loadConfig(map: MutableMap<String, String>) {
         val applicationProperties = AuxApplication::class.readResourceAsStream("/application.properties")
-            ?.let { Properties().apply { load(it) } }
+            ?.use { Properties().apply { load(it) } }
         if (applicationProperties != null) {
             for (key in applicationProperties.stringPropertyNames()) {
                 if (key in map) continue
                 val value = applicationProperties.getProperty(key)
                 map[key] = value
             }
+        }
+        val fileAppProperties = File("./application.properties")
+        if (fileAppProperties.isFile) {
+            val properties = fileAppProperties.inputStream().use {
+                Properties().apply { load(it) }
+            }
+            for (key in properties.stringPropertyNames()) {
+                if (key in map) continue
+                val value = properties.getProperty(key)
+                map[key] = value
+            }
+        } else {
+            logger.warn("No application.properties found in current directory.")
         }
     }
 
