@@ -1,7 +1,7 @@
 package starry.auxframework.application
 
 import starry.auxframework.AuxFramework
-import starry.auxframework.application.util.miniMessage
+import starry.auxframework.logging.util.miniMessage
 import starry.auxframework.util.readResourceAsText
 import java.io.PrintStream
 

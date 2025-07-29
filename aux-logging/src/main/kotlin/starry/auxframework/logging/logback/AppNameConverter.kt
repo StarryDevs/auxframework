@@ -3,7 +3,7 @@ package starry.auxframework.logging.logback
 import ch.qos.logback.classic.pattern.ClassicConverter
 import ch.qos.logback.classic.spi.ILoggingEvent
 import starry.auxframework.AuxFramework
-import starry.auxframework.application.util.miniMessage
+import starry.auxframework.logging.util.miniMessage
 
 class AppNameConverter : ClassicConverter() {
 
