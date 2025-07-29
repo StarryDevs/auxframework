@@ -3,9 +3,6 @@ package starry.auxframework.context.property.validation
 import starry.auxframework.context.annotation.EnableValidation
 import starry.auxframework.context.annotation.Validated
 import starry.auxframework.context.property.PropertyResolver
-import kotlin.collections.component1
-import kotlin.collections.component2
-import kotlin.collections.iterator
 import kotlin.reflect.full.createInstance
 import kotlin.reflect.full.findAnnotation
 
@@ -26,7 +23,11 @@ interface Validator<A : Annotation> {
         }
 
         @Throws(ValidationException::class)
-        fun check(value: Any?, validators: Map<Validator<out Annotation>, List<Annotation>>, propertyResolver: PropertyResolver) {
+        fun check(
+            value: Any?,
+            validators: Map<Validator<out Annotation>, List<Annotation>>,
+            propertyResolver: PropertyResolver
+        ) {
             for ((validator, annotations) in validators) {
                 val validator = validator as Validator<Annotation>
                 for (annotation in annotations) {

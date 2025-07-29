@@ -56,7 +56,11 @@ interface BeanFactory : AutoCloseable {
     /**
      * 自动填充
      */
-    fun autowire(type: KClass<*>, annotations: List<Annotation>, autowireOptions: AutowireOptions = AutowireOptions()): Any?
+    fun autowire(
+        type: KClass<*>,
+        annotations: List<Annotation>,
+        autowireOptions: AutowireOptions = AutowireOptions()
+    ): Any?
 
     override fun close()
 

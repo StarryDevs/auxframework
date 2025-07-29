@@ -220,7 +220,10 @@ open class AnnotationConfigApplicationContext(
                     val value = member.get(beanDefinition.instanceObject)
                     Validator.check(value, validators, propertyResolver)
                 } catch (exception: ValidationException) {
-                    throw IllegalStateException("Validation failed for property '${member.name}' of bean '${beanDefinition.name}'", exception)
+                    throw IllegalStateException(
+                        "Validation failed for property '${member.name}' of bean '${beanDefinition.name}'",
+                        exception
+                    )
                 }
             }
         }
