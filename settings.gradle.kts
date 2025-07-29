@@ -15,6 +15,6 @@ include(":aux-web")
 include(":aux-validation")
 include(":aux-application")
 include(":aux-logging")
-include(":aux-logging:xml")
+include(":aux-logging-xml")
 
 rootProject.name = "auxframework"
