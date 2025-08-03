@@ -46,9 +46,7 @@ open class AnnotationConfigApplicationContext(
     ConfigurableApplicationContext() {
 
     protected val beans = mutableMapOf<String, BeanDefinition>()
-
     override val propertyResolver = PropertyResolver(this, Properties())
-
     protected val beanPostProcessors = mutableListOf<BeanPostProcessor>()
 
     protected fun collectImports(
@@ -151,7 +149,8 @@ open class AnnotationConfigApplicationContext(
             val type = parameter.type.classifier as KClass<*>
             val annotations = parameter.annotations
             val autowireOptions = AutowireOptions(
-                enableValidation = enableValidation
+                enableValidation = enableValidation,
+                valueType = parameter.type
             )
             val value = autowire(type, annotations, autowireOptions)
             if (value != null) arguments[parameter] = value
@@ -191,7 +190,10 @@ open class AnnotationConfigApplicationContext(
             val type = member.returnType.classifier as? KClass<*> ?: continue
             val annotations = member.annotations
             val value = try {
-                val options = AutowireOptions(enableValidation = enableValidation)
+                val options = AutowireOptions(
+                    enableValidation = enableValidation,
+                    valueType = member.returnType
+                )
                 autowire(type, annotations, options)
             } catch (exception: Throwable) {
                 throw IllegalStateException("Unable to autowire '${member.name}' of ${beanDefinition.name}", exception)
@@ -232,7 +234,22 @@ open class AnnotationConfigApplicationContext(
     override fun autowire(type: KClass<*>, annotations: List<Annotation>, autowireOptions: AutowireOptions): Any? {
         val valueAnnotation = annotations.find { it is Value } as? Value?
         val qualifierAnnotation = annotations.find { it is Qualifier } as? Qualifier?
+        val propertyAnnotation = annotations.find { it is Property } as? Property?
         val validators = Validator.fromAnnotations(annotations)
+
+        if (propertyAnnotation != null) {
+            val propertyType = if (propertyAnnotation.type != Property.Empty::class) {
+                val nullable = when (propertyAnnotation.isNullable) {
+                    Property.Nullable.YES -> true
+                    Property.Nullable.NO -> false
+                    Property.Nullable.DEFAULT -> autowireOptions.valueType?.isMarkedNullable ?: false
+                }
+                propertyAnnotation.type.createType(nullable = nullable)
+            } else autowireOptions.valueType
+            if (propertyType != null)
+                propertyResolver.typeDefinitions.getOrPut(propertyAnnotation.name, ::mutableSetOf)
+                    .add(propertyType)
+        }
 
         @Suppress("UNCHECKED_CAST")
         fun check(value: Any?) = value.also {

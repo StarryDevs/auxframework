@@ -8,8 +8,6 @@ plugins {
 
 dependencies {
     api(project(":aux-context"))
-    api(project(":aux-aop"))
-    api(project(":aux-web"))
     api(project(":aux-logging"))
 
     testImplementation(kotlin("test"))

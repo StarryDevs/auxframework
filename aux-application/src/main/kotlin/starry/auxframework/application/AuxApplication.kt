@@ -36,7 +36,6 @@ data class AuxApplicationBuilder(
 
 }
 
-
 class AuxApplication(private val builder: AuxApplicationBuilder = AuxApplicationBuilder()) {
 
     val logger = getLogger()

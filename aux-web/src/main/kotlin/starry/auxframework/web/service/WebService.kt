@@ -12,6 +12,7 @@ import starry.auxframework.context.annotation.EnableValidation
 import starry.auxframework.context.annotation.Import
 import starry.auxframework.context.annotation.stereotype.Service
 import starry.auxframework.context.bean.ApplicationListener
+import starry.auxframework.context.property.AutowireOptions
 import starry.auxframework.context.property.validation.Validator
 import starry.auxframework.web.annotation.RequestInject
 import starry.auxframework.web.annotation.RequestMapping
@@ -105,7 +106,14 @@ class WebService(
                     .check(result, Validator.fromAnnotations(parameter.annotations), propertyResolver)
                 if (result != null || !parameter.isOptional) arguments[parameter] = result
             } else arguments[parameter] =
-                beanFactory.autowire(parameter.type.classifier as KClass<*>, parameter.annotations)
+                beanFactory.autowire(
+                    parameter.type.classifier as KClass<*>,
+                    parameter.annotations,
+                    AutowireOptions(
+                        enableValidation = enableValidation,
+                        valueType = parameter.type
+                    )
+                )
         }
 
         val response = method.callSuspendBy(arguments)

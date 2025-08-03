@@ -17,6 +17,7 @@ import kotlin.jvm.optionals.getOrNull
 import kotlin.random.Random
 import kotlin.random.nextLong
 import kotlin.reflect.KClass
+import kotlin.reflect.KType
 import kotlin.reflect.cast
 
 private fun Properties.toEnvMap() = buildMap {
@@ -211,6 +212,8 @@ class PropertyResolver(val beanFactory: BeanFactory, properties: Map<String, Str
     }
 
     constructor(beanFactory: BeanFactory, properties: Properties) : this(beanFactory, properties.toEnvMap())
+
+    val typeDefinitions = mutableMapOf<String, MutableSet<KType>>()
 
     fun <T : Any> resolve(type: KClass<T>, value: Any?): T? {
         return if (type.isInstance(value)) type.cast(value)
