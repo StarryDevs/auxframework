@@ -1,11 +1,15 @@
 package starry.auxframework.application
 
+import com.typesafe.config.Config
+import com.typesafe.config.ConfigFactory
 import starry.auxframework.AuxFramework
+import starry.auxframework.application.util.loadPropertiesFromMap
 import starry.auxframework.context.AnnotationConfigApplicationContext
 import starry.auxframework.context.ConfigurableApplicationContext
 import starry.auxframework.util.getLogger
 import starry.auxframework.util.readResourceAsStream
 import java.io.File
+import java.io.InputStream
 import java.util.*
 import kotlin.reflect.KClass
 import kotlin.time.measureTime
@@ -59,28 +63,56 @@ class AuxApplication(private val builder: AuxApplicationBuilder = AuxApplication
     }
 
     private fun loadConfig(map: MutableMap<String, String>) {
-        val applicationProperties = AuxApplication::class.readResourceAsStream("/application.properties")
-            ?.use { Properties().apply { load(it) } }
-        if (applicationProperties != null) {
-            for (key in applicationProperties.stringPropertyNames()) {
-                if (key in map) continue
-                val value = applicationProperties.getProperty(key)
-                map[key] = value
-            }
+        val fileAppHocon = File("./application.conf")
+        if (fileAppHocon.isFile) {
+            loadHoconConfig(map, ConfigFactory.parseFile(fileAppHocon))
+        } else {
+            logger.debug("No application.conf found in current directory.")
         }
         val fileAppProperties = File("./application.properties")
         if (fileAppProperties.isFile) {
-            val properties = fileAppProperties.inputStream().use {
-                Properties().apply { load(it) }
-            }
-            for (key in properties.stringPropertyNames()) {
-                if (key in map) continue
-                val value = properties.getProperty(key)
-                map[key] = value
-            }
+            loadPropertiesConfig(map, fileAppProperties.inputStream())
         } else {
-            logger.warn("No application.properties found in current directory.")
+            logger.debug("No application.properties found in current directory.")
         }
+        if (AuxApplication::class.readResourceAsStream("/application.conf")?.apply(InputStream::close) == null) {
+            logger.debug("No application.conf found in classpath.")
+        } else {
+            loadHoconConfig(map, ConfigFactory.parseResources("application.conf"))
+        }
+        val classpathAppProperties = AuxApplication::class.readResourceAsStream("/application.properties")
+        if (classpathAppProperties != null) {
+            loadPropertiesConfig(map, classpathAppProperties)
+        } else {
+            logger.debug("No application.properties found in classpath.")
+        }
+    }
+
+    private fun loadHoconConfig(
+        map: MutableMap<String, String>,
+        config: Config,
+    ) {
+        val properties = mutableSetOf<Pair<String, String>>()
+        loadPropertiesFromMap(config.resolve().root().unwrapped(), properties)
+        for ((key, value) in properties) {
+            if (key in map) continue
+            map[key] = value
+        }
+    }
+
+    private fun loadPropertiesConfig(
+        map: MutableMap<String, String>,
+        data: InputStream,
+    ) {
+        val properties = data.use {
+            Properties().apply { load(it) }
+        }
+        for (key in properties.stringPropertyNames()) {
+            if (key in map) continue
+            val value = properties.getProperty(key)
+            map[key] = value
+        }
+
     }
 
 }

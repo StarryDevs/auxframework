@@ -1,7 +1,7 @@
 [versions]
 kotlin = "2.1.20"
 kotlinx-datetime = "0.6.1"
-kotlinx-serialization-json = "1.7.3"
+kotlinx-serialization = "1.9.0"
 kotlinx-coroutines = "1.9.0"
 slf4j = "2.1.0-alpha1"
 logback = "1.5.18"
@@ -13,7 +13,8 @@ ktor = "3.2.0"
 [libraries]
 kotlin-gradle-plugin = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "kotlin" }
 kotlinx-datetime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version.ref = "kotlinx-datetime" }
-kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinx-serialization-json" }
+kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinx-serialization" }
+kotlinx-serialization-hocon = { module = "org.jetbrains.kotlinx:kotlinx-serialization-hocon", version.ref = "kotlinx-serialization" }
 kotlinx-coroutines = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kotlinx-coroutines" }
 slf4j-api = { module = "org.slf4j:slf4j-api", version.ref = "slf4j" }
 logback-classic = { module = "ch.qos.logback:logback-classic", version.ref = "logback" }
@@ -27,7 +28,7 @@ ktor-server-core = { module = "io.ktor:ktor-server-core-jvm", version.ref = "kto
 ktor-server-netty = { module = "io.ktor:ktor-server-netty", version.ref = "ktor" }
 
 [bundles]
-kotlinx-ecosystem = ["kotlinx-datetime", "kotlinx-serialization-json", "kotlinx-coroutines"]
+kotlinx-ecosystem = ["kotlinx-datetime", "kotlinx-serialization-json", "kotlinx-serialization-hocon", "kotlinx-coroutines"]
 logback = ["logback-classic", "logback-core", "slf4j-api"]
 adventure = ["adventure-text-minimessage", "adventure-text-serializer-ansi", "adventure-api"]
 ktor-server-netty = ["ktor-server-core", "ktor-server-netty"]
