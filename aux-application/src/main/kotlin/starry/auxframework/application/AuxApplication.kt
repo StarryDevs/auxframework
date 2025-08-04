@@ -3,10 +3,10 @@ package starry.auxframework.application
 import com.typesafe.config.Config
 import com.typesafe.config.ConfigFactory
 import starry.auxframework.AuxFramework
-import starry.auxframework.util.loadPropertiesFromMap
 import starry.auxframework.context.AnnotationConfigApplicationContext
 import starry.auxframework.context.ConfigurableApplicationContext
 import starry.auxframework.util.getLogger
+import starry.auxframework.util.loadPropertiesFromMap
 import starry.auxframework.util.readResourceAsStream
 import java.io.File
 import java.io.InputStream
@@ -50,7 +50,8 @@ class AuxApplication(private val builder: AuxApplicationBuilder = AuxApplication
             loadConfig(context.propertyResolver)
             context.load()
         }
-        Runtime.getRuntime().addShutdownHook(Thread(::shutdownHook, "AuxApplication Shutdown Hook"))
+        Runtime.getRuntime()
+            .addShutdownHook(Thread(::shutdownHook, "AuxApplication Shutdown Hook"))
         logger.info("Application context loaded in ${time.inWholeMilliseconds}ms.")
         return context
     }
