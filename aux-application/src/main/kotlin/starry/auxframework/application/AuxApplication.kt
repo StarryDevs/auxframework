@@ -3,7 +3,7 @@ package starry.auxframework.application
 import com.typesafe.config.Config
 import com.typesafe.config.ConfigFactory
 import starry.auxframework.AuxFramework
-import starry.auxframework.application.util.loadPropertiesFromMap
+import starry.auxframework.util.loadPropertiesFromMap
 import starry.auxframework.context.AnnotationConfigApplicationContext
 import starry.auxframework.context.ConfigurableApplicationContext
 import starry.auxframework.util.getLogger

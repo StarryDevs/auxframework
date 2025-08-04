@@ -1,4 +1,6 @@
-package starry.auxframework.application.util
+package starry.auxframework.util
+
+import kotlin.collections.iterator
 
 fun loadPropertiesFromMap(map: Map<String, Any?>, saved: MutableSet<Pair<String, String>>, prefix: String = "") {
     for ((key, value) in map) {

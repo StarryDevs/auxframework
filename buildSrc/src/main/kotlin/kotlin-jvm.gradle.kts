@@ -13,6 +13,10 @@ plugins {
 
 kotlin {
     jvmToolchain(21)
+
+    compilerOptions {
+        freeCompilerArgs.add("-Xcontext-parameters")
+    }
 }
 
 tasks.withType<Test>().configureEach {

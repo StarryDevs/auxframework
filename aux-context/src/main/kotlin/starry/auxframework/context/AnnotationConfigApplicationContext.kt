@@ -6,6 +6,7 @@ import starry.auxframework.context.annotation.stereotype.Indexed
 import starry.auxframework.context.aware.BeanFactoryAware
 import starry.auxframework.context.aware.ConfigurableApplicationContextAware
 import starry.auxframework.context.bean.ApplicationListener
+import starry.auxframework.context.bean.BeanConstructor
 import starry.auxframework.context.bean.BeanDefinition
 import starry.auxframework.context.bean.BeanPostProcessor
 import starry.auxframework.context.bean.InitializingBean
@@ -135,28 +136,45 @@ open class AnnotationConfigApplicationContext(
         getBeans<ApplicationListener>().forEach(ApplicationListener::finishLoading)
     }
 
+
+    protected val beanConstructors = mutableSetOf<BeanConstructor>()
+
     protected fun construct(beans: Set<BeanDefinition>) {
         beans.sortedBy { it.order }.forEach(::construct)
     }
 
+    private fun createInstance(beanDefinition: BeanDefinition): Any? {
+        if (beanDefinition.constructor == null) {
+            for (it in beanConstructors) {
+                val instance = it.constructBean(beanDefinition)
+                if (instance.isSome()) {
+                    return instance
+                }
+            }
+            return null
+        } else {
+            val enableValidation = (beanDefinition.constructor.findAnnotation<EnableValidation>()?.enabled)
+                ?: (beanDefinition.beanClass.findAnnotation<EnableValidation>()?.enabled == true)
+            val arguments = mutableMapOf<KParameter, Any?>()
+            for (parameter in beanDefinition.constructor.parameters) {
+                val type = parameter.type.classifier as KClass<*>
+                val annotations = parameter.annotations
+                val autowireOptions = AutowireOptions(
+                    enableValidation = enableValidation,
+                    valueType = parameter.type
+                )
+                val value = autowire(type, annotations, autowireOptions)
+                if (value != null) arguments[parameter] = value
+                else if (!parameter.isOptional) arguments[parameter] = null
+            }
+            val instance = beanDefinition.constructor.callBy(arguments)
+            return instance
+        }
+    }
+
     private fun construct(beanDefinition: BeanDefinition): Any? {
         if (beanDefinition.constructed) return beanDefinition.instanceObject
-        val constructor = beanDefinition.constructor ?: return null
-        val enableValidation = (constructor.findAnnotation<EnableValidation>()?.enabled)
-            ?: (beanDefinition.beanClass.findAnnotation<EnableValidation>()?.enabled == true)
-        val arguments = mutableMapOf<KParameter, Any?>()
-        for (parameter in constructor.parameters) {
-            val type = parameter.type.classifier as KClass<*>
-            val annotations = parameter.annotations
-            val autowireOptions = AutowireOptions(
-                enableValidation = enableValidation,
-                valueType = parameter.type
-            )
-            val value = autowire(type, annotations, autowireOptions)
-            if (value != null) arguments[parameter] = value
-            else if (!parameter.isOptional) arguments[parameter] = null
-        }
-        val instance = constructor.callBy(arguments)
+        val instance = createInstance(beanDefinition)
         beanDefinition.instanceObject = instance
         beanDefinition.getInitMethod()?.call(instance)
         callAwares(beanDefinition.instanceObject)
@@ -165,6 +183,9 @@ open class AnnotationConfigApplicationContext(
         }
         if (beanDefinition.instanceObject is BeanPostProcessor) {
             beanPostProcessors += beanDefinition.instanceObject as BeanPostProcessor
+        }
+        if (beanDefinition.instanceObject is BeanConstructor) {
+            beanConstructors += beanDefinition.instanceObject as BeanConstructor
         }
         beanDefinition.constructed = true
         autowire(beanDefinition)
@@ -336,7 +357,7 @@ open class AnnotationConfigApplicationContext(
 
     override fun registerSingleton(singleton: Any, name: String?) {
         val beanName = name ?: singleton::class.jvmName
-        require(singleton !in beans) { "Duplicate bean name: $name" }
+        require(beanName !in beans) { "Duplicate bean name: $name" }
         val beanDefinition = BeanDefinition(beanName, singleton::class, singleton)
         beanDefinition.constructed = true
         beanDefinition.propertySet = true
