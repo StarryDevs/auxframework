@@ -15,7 +15,8 @@ class BeanDefinition(
     private val initMethodName: String? = null,
     private val destroyMethodName: String? = null,
     private val initMethod: KFunction<*>? = null,
-    private val destroyMethod: KFunction<*>? = null
+    private val destroyMethod: KFunction<*>? = null,
+    val symbol: String? = null
 ) : Comparable<BeanDefinition> {
 
     override fun compareTo(other: BeanDefinition) = order.compareTo(other.order)

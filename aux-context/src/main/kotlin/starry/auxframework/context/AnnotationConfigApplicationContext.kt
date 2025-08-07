@@ -98,7 +98,8 @@ open class AnnotationConfigApplicationContext(
                 initMethodName = baseBeanAnnotation?.initMethod?.takeUnless(String::isEmpty),
                 destroyMethodName = baseBeanAnnotation?.destroyMethod?.takeUnless(String::isEmpty),
                 initMethod = beanClass.memberFunctions.firstOrNull { it.hasAnnotation<PostConstruct>() },
-                destroyMethod = beanClass.memberFunctions.firstOrNull { it.hasAnnotation<PreDestroy>() }
+                destroyMethod = beanClass.memberFunctions.firstOrNull { it.hasAnnotation<PreDestroy>() },
+                symbol = baseBeanAnnotation?.symbol?.takeUnless(String::isEmpty)
             )
             beanDefinitions[beanDefinition.name] = beanDefinition
             for (member in beanClass.members) {
@@ -255,6 +256,7 @@ open class AnnotationConfigApplicationContext(
         val valueAnnotation = annotations.find { it is Value } as? Value?
         val qualifierAnnotation = annotations.find { it is Qualifier } as? Qualifier?
         val propertyAnnotation = annotations.find { it is Property } as? Property?
+        val symbolAnnotation = annotations.find { it is Symbol } as? Symbol?
         val validators = Validator.fromAnnotations(annotations)
 
         if (propertyAnnotation != null) {
@@ -287,20 +289,22 @@ open class AnnotationConfigApplicationContext(
         } else {
             if (type.java.isArray) {
                 val componentType = type.java.componentType.kotlin
-                val beans =
-                    if (qualifierAnnotation == null) findBeanDefinitions(componentType).map(::construct) else emptySet()
-                val array = Array.newInstance(componentType.java, beans.size)
-                if (qualifierAnnotation != null) {
+                val array = if (qualifierAnnotation != null) {
+                    val array = Array.newInstance(componentType.java, 1)
                     Array.set(array, 0, getBean(qualifierAnnotation.name))
+                    array
                 } else {
+                    val beans = findBeanDefinitions(componentType, symbolAnnotation?.name).map(::construct)
+                    val array = Array.newInstance(componentType.java, beans.size)
                     beans.forEachIndexed { index, value -> Array.set(array, index, value) }
+                    array
                 }
                 return check(array)
             }
             val bean = runCatching {
                 if (qualifierAnnotation != null)
                     findBeanDefinition(qualifierAnnotation.name)
-                else findBeanDefinition(type)
+                else findBeanDefinition(type, symbolAnnotation?.name)
             }.getOrNull()?.let { construct(it) }
             return check(bean)
         }
@@ -339,8 +343,11 @@ open class AnnotationConfigApplicationContext(
 
 
     override fun findBeanDefinition(name: String) = beans[name]
-    override fun <T : Any> findBeanDefinitions(type: KClass<T>) =
-        beans.values.filter { it.beanClass.isSubclassOf(type) }.toSet()
+    override fun <T : Any> findBeanDefinitions(type: KClass<T>, symbol: String?) =
+        beans.values
+            .filter { it.beanClass.isSubclassOf(type) }
+            .filter { symbol == null || it.symbol == symbol }
+            .toSet()
 
     override fun close() {
         this.beans.values.sortedByDescending { it.order }.forEach {
@@ -352,13 +359,14 @@ open class AnnotationConfigApplicationContext(
         beans.clear()
     }
 
-    override fun registerSingleton(singleton: Any, name: String?) {
+    override fun registerSingleton(singleton: Any, name: String?, symbol: String?): BeanDefinition {
         val beanName = name ?: singleton::class.jvmName
         require(beanName !in beans) { "Duplicate bean name: $name" }
-        val beanDefinition = BeanDefinition(beanName, singleton::class, singleton)
+        val beanDefinition = BeanDefinition(beanName, singleton::class, singleton, symbol = symbol)
         beanDefinition.constructed = true
         beanDefinition.propertySet = true
         beans[beanName] = beanDefinition
+        return beanDefinition
     }
 
 }

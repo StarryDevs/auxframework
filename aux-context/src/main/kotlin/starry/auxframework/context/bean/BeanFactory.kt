@@ -1,6 +1,5 @@
 package starry.auxframework.context.bean
 
-import starry.auxframework.context.property.AutowireOptions
 import kotlin.reflect.KClass
 
 interface BeanFactory : AutoCloseable {
@@ -21,7 +20,7 @@ interface BeanFactory : AutoCloseable {
      * @return Bean 实例
      * @throws NoSuchBeanException 如果没有找到指定类型的 Bean
      */
-    fun <T : Any> getBean(type: KClass<T>): T
+    fun <T : Any> getBean(type: KClass<T>, symbol: String? = null): T
 
     /**
      * 根据类型获取 Bean
@@ -29,7 +28,7 @@ interface BeanFactory : AutoCloseable {
      * @param type Bean 的类型
      * @throws NoSuchBeanException 如果没有找到指定名称和类型的 Bean
      */
-    fun <T : Any> getBeans(type: KClass<T>): Set<T>
+    fun <T : Any> getBeans(type: KClass<T>, symbol: String? = null): Set<T>
 
     /**
      * 判断 Bean 是否存在
@@ -43,24 +42,7 @@ interface BeanFactory : AutoCloseable {
      *
      * @param type Bean 的类型
      */
-    fun containsBean(type: KClass<*>): Boolean
-
-    /**
-     * 创建单例对象 Bean
-     *
-     * @param singleton 单例对象
-     * @param name Bean 名称 (选填，默认自动生成)
-     */
-    fun registerSingleton(singleton: Any, name: String? = null)
-
-    /**
-     * 自动填充
-     */
-    fun autowire(
-        type: KClass<*>,
-        annotations: List<Annotation>,
-        autowireOptions: AutowireOptions = AutowireOptions()
-    ): Any?
+    fun containsBean(type: KClass<*>, symbol: String? = null): Boolean
 
     override fun close()
 
