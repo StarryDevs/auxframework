@@ -91,14 +91,13 @@ class WebService(
         routingContextHandler.context.set(this)
 
         val arguments = mutableMapOf<KParameter, Any?>()
-        val enableValidation = restController::class.findAnnotation<EnableValidation>()?.enabled != false &&
-                method.findAnnotation<EnableValidation>()?.enabled != false
+        val enableValidation = method.findAnnotation<EnableValidation>()?.enabled == true
         for (parameter in method.parameters) {
             if (parameter.kind == KParameter.Kind.INSTANCE) arguments[parameter] = restController
             else if (parameter.annotations.any { it.annotationClass.hasAnnotation<RequestInject>() || it is RequestInject }) {
                 val result = processRequestInject(parameter, this)?.let {
-                    propertyResolver.resolve(
-                        parameter.type.classifier as KClass<*>,
+                    propertyResolver.resolve<Any>(
+                        parameter.type,
                         it
                     )
                 }
