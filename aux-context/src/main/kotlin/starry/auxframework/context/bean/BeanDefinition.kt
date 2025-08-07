@@ -39,8 +39,7 @@ class BeanDefinition(
     override fun hashCode() = name.hashCode()
     override fun equals(other: Any?) = other != null && other is BeanDefinition && other.name == name
 
-    override fun toString(): String {
-        return "BeanDefinition(name='$name', instance=$instanceObject, order=$order)"
-    }
+    override fun toString() =
+        "BeanDefinition(name='$name', instance=$instanceObject, order=$order${if (symbol != null) ", symbol='$symbol'" else ""})"
 
 }

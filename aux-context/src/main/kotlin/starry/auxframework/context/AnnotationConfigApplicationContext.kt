@@ -111,7 +111,8 @@ open class AnnotationConfigApplicationContext(
                     beanClassType.classifier as KClass<*>,
                     constructor = member,
                     initMethodName = beanAnnotation.initMethod.takeUnless(String::isEmpty),
-                    destroyMethodName = beanAnnotation.destroyMethod.takeUnless(String::isEmpty)
+                    destroyMethodName = beanAnnotation.destroyMethod.takeUnless(String::isEmpty),
+                    symbol = beanAnnotation.symbol.takeUnless(String::isEmpty)
                 )
                 beanDefinitions[memberBeanName] = memberBeanDefinition
             }
