@@ -229,8 +229,8 @@ class PropertyResolver(val beanFactory: BeanFactory, properties: Map<String, Str
             return value.deserialize(type)
         }
         val kClass = type.classifier as? KClass<T> ?: return null
-        return if (kClass.isInstance(value)) kClass.cast(value)
-        else kClass.cast(CONVERTERS[kClass]?.invoke(this, value))
+        return if (value != null && kClass.isInstance(value)) kClass.cast(value)
+        else kClass.cast(CONVERTERS[kClass]?.invoke(this, value) ?: return null)
     }
 
     fun call(name: String, arguments: List<PropertyExpression>): Any? {

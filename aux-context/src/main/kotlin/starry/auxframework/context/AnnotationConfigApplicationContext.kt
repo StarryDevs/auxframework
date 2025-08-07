@@ -170,7 +170,6 @@ open class AnnotationConfigApplicationContext(
             if (beanDefinition.beanClass.hasAnnotation<Configuration>()) configurations += beanDefinition
             else nonConfigurations += beanDefinition
         }
-        println(dependencyList.toList())
         construct(configurations)
         construct(nonConfigurations)
         getBeans<ApplicationListener>().forEach(ApplicationListener::finishLoading)
