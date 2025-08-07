@@ -23,6 +23,44 @@ import kotlin.reflect.jvm.jvmName
 
 class DependencyList : Iterable<BeanDefinition> {
 
+    interface Dependency {
+        fun findAll(beanFactory: ConfigurableApplicationContext): Set<BeanDefinition>
+
+        companion object {
+            fun from(type: KClass<*>, annotations: List<Annotation>): Dependency {
+                val valueAnnotation = annotations.find { it is Value } as? Value?
+                val qualifierAnnotation = annotations.find { it is Qualifier } as? Qualifier?
+                val symbolAnnotation = annotations.find { it is Symbol } as? Symbol?
+                if (valueAnnotation != null)
+                    return EmptyDependency()
+                val type = if (type.java.isArray) type.java.componentType.kotlin else type
+                return if (qualifierAnnotation != null) {
+                    NamedDependency(qualifierAnnotation.name)
+                } else {
+                    TypedDependency(type, symbolAnnotation?.name)
+                }
+            }
+        }
+
+    }
+
+    class EmptyDependency : Dependency {
+        override fun findAll(beanFactory: ConfigurableApplicationContext) = emptySet<BeanDefinition>()
+    }
+
+    class TypedDependency(
+        private val type: KClass<*>,
+        private val symbol: String? = null
+    ) : Dependency {
+        override fun findAll(beanFactory: ConfigurableApplicationContext) = beanFactory.findBeanDefinitions(type, symbol)
+    }
+
+    class NamedDependency(
+        private val name: String
+    ) : Dependency {
+        override fun findAll(beanFactory: ConfigurableApplicationContext) = setOfNotNull(beanFactory.findBeanDefinition(name))
+    }
+
     private val list: MutableList<BeanDefinition> = mutableListOf()
 
     operator fun contains(beanDefinition: BeanDefinition) = beanDefinition in list
@@ -132,6 +170,7 @@ open class AnnotationConfigApplicationContext(
             if (beanDefinition.beanClass.hasAnnotation<Configuration>()) configurations += beanDefinition
             else nonConfigurations += beanDefinition
         }
+        println(dependencyList.toList())
         construct(configurations)
         construct(nonConfigurations)
         getBeans<ApplicationListener>().forEach(ApplicationListener::finishLoading)
@@ -324,22 +363,18 @@ open class AnnotationConfigApplicationContext(
             throw IllegalStateException("Circular dependency detected: ${stack.joinToString(" -> ") { it.name }} -> ${beanDefinition.name}")
         }
         stack += beanDefinition
-        val dependencies = mutableListOf<Class<*>>()
-        dependencies += beanDefinition.constructor?.parameters?.map { it.type.javaType }?.filterIsInstance<Class<*>>()
-            ?: emptyList()
+        val dependencies = beanDefinition.constructor?.parameters
+            ?.map { DependencyList.Dependency.from(it.type.classifier as KClass<*>, it.annotations) }
+            ?.flatMap { it.findAll(this) }
+            ?.toMutableSet()
+            ?: mutableSetOf()
         listOfNotNull(beanDefinition.beanClass, beanDefinition.constructor).mapNotNull {
             findAnnotation(it, Import::class)
         }.forEach {
-            dependencies += it.classes.map { clazz -> clazz.java }
+            dependencies += it.classes.flatMap { type -> DependencyList.TypedDependency(type).findAll(this) }
         }
-        for (type in dependencies) {
-            if (type.isArray) {
-                for (component in findBeanDefinitions(type.componentType().kotlin)) {
-                    collectDependencies(dependencyList, component, stack)
-                }
-            } else {
-                collectDependencies(dependencyList, findBeanDefinition(type.kotlin) ?: continue, stack)
-            }
+        dependencies.forEach {
+            collectDependencies(dependencyList, it, stack)
         }
         dependencyList.add(beanDefinition)
     }
