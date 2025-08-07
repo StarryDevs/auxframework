@@ -168,6 +168,7 @@ open class AnnotationConfigApplicationContext(
                 if (value != null) arguments[parameter] = value
                 else if (!parameter.isOptional) arguments[parameter] = null
             }
+            beanDefinition.constructor.isAccessible = true
             val instance = beanDefinition.constructor.callBy(arguments)
             return instance
         }
@@ -177,6 +178,7 @@ open class AnnotationConfigApplicationContext(
         if (beanDefinition.constructed) return beanDefinition.instanceObject
         val instance = createInstance(beanDefinition)
         beanDefinition.instanceObject = instance
+        beanDefinition.getInitMethod()?.isAccessible = true
         beanDefinition.getInitMethod()?.call(instance)
         callAwares(beanDefinition.instanceObject)
         beanDefinition.instanceObject = beanPostProcessors.fold(beanDefinition.instanceObject) { it, processor ->
