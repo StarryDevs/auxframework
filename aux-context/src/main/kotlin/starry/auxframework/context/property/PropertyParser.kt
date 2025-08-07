@@ -12,7 +12,7 @@ import starry.adventure.parser.util.singleLineString
 
 object PropertyParser {
 
-    val properties: MutableSet<out Parser<out PropertyExpression>> by lazy {
+    val properties: MutableSet<Parser<out PropertyExpression>> by lazy {
         mutableSetOf(simpleExpression, callExpression, literalExpression, runningArgumentExpression, evaluateExpression)
     }
 
