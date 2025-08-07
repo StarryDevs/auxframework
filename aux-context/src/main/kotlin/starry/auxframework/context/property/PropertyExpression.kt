@@ -1,6 +1,8 @@
 package starry.auxframework.context.property
 
+import kotlinx.serialization.serializer
 import starry.auxframework.AuxFramework
+import kotlin.reflect.KType
 
 interface PropertyExpression {
 
@@ -28,9 +30,9 @@ class SimplePropertyExpression(private val key: String, private val default: Pro
 
     override fun toString(): String {
         return if (default != null) {
-            "\${$key:$default}"
+            $$"${$$key:$$default}"
         } else {
-            "\${$key}"
+            $$"${$$key}"
         }
     }
 
@@ -62,6 +64,30 @@ class RunningArgumentPropertyExpression(private val index: Int) : PropertyExpres
 
     override fun toString(): String {
         return "$$index"
+    }
+
+}
+
+class EvaluatePropertyExpression(private val key: String, private val default: PropertyExpression? = null) :
+    PropertyExpression {
+
+    override fun resolve(properties: PropertyResolver): Any? {
+        val helper = properties.helper
+        if (key !in helper) return default?.resolve(properties)
+        return Evaluation(helper)
+    }
+
+    override fun toString(): String {
+        return if (default != null) {
+            "%{$key:$default}"
+        } else {
+            "%{$key}"
+        }
+    }
+
+    private inner class Evaluation(val propertyHelper: PropertyHelper) : PropertyResolver.PropertyDeserializer {
+        @Suppress("UNCHECKED_CAST")
+        override fun <T> deserialize(type: KType) = propertyHelper.get(serializer(type), key) as? T?
     }
 
 }

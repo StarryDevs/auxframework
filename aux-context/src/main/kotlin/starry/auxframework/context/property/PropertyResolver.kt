@@ -19,6 +19,8 @@ import kotlin.random.nextLong
 import kotlin.reflect.KClass
 import kotlin.reflect.KType
 import kotlin.reflect.cast
+import kotlin.reflect.full.createType
+import kotlin.reflect.typeOf
 
 private fun Properties.toEnvMap() = buildMap {
     putAll(System.getenv())
@@ -35,6 +37,7 @@ class PropertyResolver(val beanFactory: BeanFactory, properties: Map<String, Str
     MutableMap<String, String> by properties.toMutableMap() {
 
     companion object {
+
         @JvmField
         val CONVERTERS = mutableMapOf<KClass<*>, PropertyResolver.(value: Any?) -> Any?>()
 
@@ -213,11 +216,21 @@ class PropertyResolver(val beanFactory: BeanFactory, properties: Map<String, Str
 
     constructor(beanFactory: BeanFactory, properties: Properties) : this(beanFactory, properties.toEnvMap())
 
-    val typeDefinitions = mutableMapOf<String, MutableSet<KType>>()
+    interface PropertyDeserializer {
+        fun <T> deserialize(type: KType): T?
+    }
 
-    fun <T : Any> resolve(type: KClass<T>, value: Any?): T? {
-        return if (type.isInstance(value)) type.cast(value)
-        else type.cast(CONVERTERS[type]?.invoke(this, value))
+    val typeDefinitions = mutableMapOf<String, MutableSet<KType>>()
+    val helper = PropertyHelper(this)
+
+    @Suppress("UNCHECKED_CAST")
+    fun <T : Any> resolve(type: KType, value: Any?): T? {
+        if (value != null && value is PropertyDeserializer) {
+            return value.deserialize(type)
+        }
+        val kClass = type.classifier as? KClass<T> ?: return null
+        return if (kClass.isInstance(value)) kClass.cast(value)
+        else kClass.cast(CONVERTERS[kClass]?.invoke(this, value))
     }
 
     fun call(name: String, arguments: List<PropertyExpression>): Any? {
@@ -227,17 +240,17 @@ class PropertyResolver(val beanFactory: BeanFactory, properties: Map<String, Str
 
     fun parse(text: String) = try {
         CharBuffer.wrap(text).parse(PropertyParser.property)
-    } catch (_: Throwable) {
-        ConstantPropertyExpression(text, text)
+    } catch (error: Throwable) {
+        throw IllegalArgumentException("Failed to parse property expression: $text", error)
     }
 
 }
 
-inline fun <reified T : Any> PropertyResolver.resolve(text: String) =
-    resolve<T>(parse(text))
+fun <T : Any> PropertyResolver.resolve(type: KClass<T>, value: Any?) =
+    resolve<T>(type.createType(), value)
 
 inline fun <reified T : Any> PropertyResolver.resolve(value: Any?) =
-    resolve(T::class, value)
+    resolve<T>(typeOf<T>(), value)
 
 inline fun <reified T : Any> PropertyResolver.resolve(expression: PropertyExpression) =
-    resolve(T::class, expression.resolve(this))
+    resolve<T>(typeOf<T>(), expression.resolve(this))

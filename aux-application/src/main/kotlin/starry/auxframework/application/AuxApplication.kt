@@ -5,8 +5,8 @@ import com.typesafe.config.ConfigFactory
 import starry.auxframework.AuxFramework
 import starry.auxframework.context.AnnotationConfigApplicationContext
 import starry.auxframework.context.ConfigurableApplicationContext
+import starry.auxframework.context.property.PropertyHelper
 import starry.auxframework.util.getLogger
-import starry.auxframework.util.loadPropertiesFromMap
 import starry.auxframework.util.readResourceAsStream
 import java.io.File
 import java.io.InputStream
@@ -93,7 +93,7 @@ class AuxApplication(private val builder: AuxApplicationBuilder = AuxApplication
         config: Config,
     ) {
         val properties = mutableSetOf<Pair<String, String>>()
-        loadPropertiesFromMap(config.resolve().root().unwrapped(), properties)
+        PropertyHelper.loadPropertiesFromMap(config.resolve().root().unwrapped(), properties)
         for ((key, value) in properties) {
             if (key in map) continue
             map[key] = value

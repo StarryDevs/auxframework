@@ -13,7 +13,7 @@ import starry.adventure.parser.util.singleLineString
 object PropertyParser {
 
     val properties: MutableSet<out Parser<out PropertyExpression>> by lazy {
-        mutableSetOf(simpleExpression, callExpression, literalExpression, runningArgumentExpression)
+        mutableSetOf(simpleExpression, callExpression, literalExpression, runningArgumentExpression, evaluateExpression)
     }
 
     val property: ParserSequence<PropertyExpression> = rule("property") {
@@ -43,6 +43,14 @@ object PropertyParser {
     val simpleExpressionPart by rule {
         +symbol(":")
         +property
+    }
+
+    val evaluateExpression by rule {
+        +symbol("%{")
+        val name = +character { it != ':' && it != '}' }.repeat().map { it.joinToString(separator = "") }
+        val default = +simpleExpressionPart.optional()
+        +symbol("}")
+        EvaluatePropertyExpression(name, default.getOrNull())
     }
 
     val simpleExpression by rule {

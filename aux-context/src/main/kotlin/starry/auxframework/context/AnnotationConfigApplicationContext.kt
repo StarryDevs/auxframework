@@ -8,6 +8,7 @@ import starry.auxframework.context.aware.ConfigurableApplicationContextAware
 import starry.auxframework.context.bean.*
 import starry.auxframework.context.property.AutowireOptions
 import starry.auxframework.context.property.PropertyResolver
+import starry.auxframework.context.property.resolve
 import starry.auxframework.context.property.validation.ValidationException
 import starry.auxframework.context.property.validation.Validator
 import starry.auxframework.io.ResourceResolver
@@ -61,6 +62,8 @@ open class AnnotationConfigApplicationContext(
     override fun load() {
         if (loaded) return
         loaded = true
+        registerSingleton(propertyResolver)
+        registerSingleton(propertyResolver.helper)
         registerSingleton(this)
         val beanDefinitions = mutableMapOf<String, BeanDefinition>()
         val beanClasses = mutableSetOf<KClass<*>>()
@@ -275,14 +278,12 @@ open class AnnotationConfigApplicationContext(
 
         if (valueAnnotation != null) {
             val text = valueAnnotation.expression
-            if (valueAnnotation.isRaw) {
-                val value = propertyResolver.resolve(type, text)
-                return check(value)
-            } else {
-                val expression = propertyResolver.parse(text)
-                val value = propertyResolver.resolve(type, expression.resolve(propertyResolver))
-                return check(value)
-            }
+            val parsed = if (valueAnnotation.isRaw) valueAnnotation.expression
+            else propertyResolver.parse(text).resolve(propertyResolver)
+            val value = if (autowireOptions.valueType != null)
+                propertyResolver.resolve(autowireOptions.valueType, parsed)
+            else propertyResolver.resolve(type, parsed)
+            return check(value)
         } else {
             if (type.java.isArray) {
                 val componentType = type.java.componentType.kotlin

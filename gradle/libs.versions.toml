@@ -13,6 +13,7 @@ ktor = "3.2.0"
 [libraries]
 kotlin-gradle-plugin = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "kotlin" }
 kotlinx-datetime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version.ref = "kotlinx-datetime" }
+kotlinx-serialization-properties = { module = "org.jetbrains.kotlinx:kotlinx-serialization-properties", version.ref = "kotlinx-serialization" }
 kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinx-serialization" }
 kotlinx-serialization-hocon = { module = "org.jetbrains.kotlinx:kotlinx-serialization-hocon", version.ref = "kotlinx-serialization" }
 kotlinx-coroutines = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kotlinx-coroutines" }
@@ -28,7 +29,7 @@ ktor-server-core = { module = "io.ktor:ktor-server-core-jvm", version.ref = "kto
 ktor-server-netty = { module = "io.ktor:ktor-server-netty", version.ref = "ktor" }
 
 [bundles]
-kotlinx-ecosystem = ["kotlinx-datetime", "kotlinx-serialization-json", "kotlinx-serialization-hocon", "kotlinx-coroutines"]
+kotlinx-ecosystem = ["kotlinx-datetime", "kotlinx-serialization-properties", "kotlinx-serialization-json", "kotlinx-serialization-hocon", "kotlinx-coroutines"]
 logback = ["logback-classic", "logback-core", "slf4j-api"]
 adventure = ["adventure-text-minimessage", "adventure-text-serializer-ansi", "adventure-api"]
 ktor-server-netty = ["ktor-server-core", "ktor-server-netty"]
