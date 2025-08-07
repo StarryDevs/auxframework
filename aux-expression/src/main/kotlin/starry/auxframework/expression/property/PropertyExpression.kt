@@ -11,8 +11,7 @@ class PropertyNegateExpression(private val expression: PropertyExpression) : Pro
 
     override fun resolve(properties: PropertyResolver): Any? {
         val obj = expression.resolve(properties) ?: return null
-        BigDecimal(1).negate()
-        val negateFunction = obj::class.memberFunctions.singleOrNull { it.name == "negate" && it.parameters.size == 1 }
+        val negateFunction = obj::class.memberFunctions.singleOrNull { (it.name == "negate" || it.name == "unaryMinus") && it.parameters.size == 1 }
         if (negateFunction != null) {
             return negateFunction.call(obj)
         }
