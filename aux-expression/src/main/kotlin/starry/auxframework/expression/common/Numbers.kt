@@ -1,29 +1,31 @@
 package starry.auxframework.expression.common
 
-import starry.adventure.parser.character
-import starry.adventure.parser.map
-import starry.adventure.parser.operator.choose
-import starry.adventure.parser.operator.optional
-import starry.adventure.parser.operator.repeat
-import starry.adventure.parser.symbol
-import starry.adventure.parser.util.rule
+import starry.akarui.core.chars.CharParser
+import starry.akarui.core.chars.character
+import starry.akarui.core.chars.symbol
+import starry.akarui.core.operator.choose
+import starry.akarui.core.operator.map
+import starry.akarui.core.operator.optional
+import starry.akarui.core.operator.repeat
+import starry.akarui.core.operator.sequence
+import starry.akarui.core.operator.unaryPlus
 import java.math.BigInteger
 
-val number by rule {
+val number = CharParser.sequence("Number") {
     +choose(hexNumber, octalNumber, binaryNumber, decimalNumber)
 }
 
-val decimalNumber by rule {
+val decimalNumber = CharParser.sequence("DecimalNumber") {
     val integerPart = +character { it in '0' .. '9' }.repeat().map { it.joinToString("") }
     if (integerPart.length != 1 && integerPart.startsWith('0')) {
         throw makeError("Invalid number format: leading zeros are not allowed")
     }
-    val decimalPart = +rule("decimalPart") {
+    val decimalPart = +sequence("DecimalPart") {
         val point = +symbol(".")
         val decimal = +character { it in '0' .. '9' }.repeat().map { it.joinToString("") }
         "$point$decimal"
     }.optional().map { it.getOrElse { "" } }
-    val exponentPart = +rule("exponentPart") {
+    val exponentPart = +sequence("ExponentPart") {
         if (integerPart.isEmpty() && decimalPart.isEmpty()) {
             throw makeSyntaxError("Invalid number format: number part must be present")
         }
@@ -35,7 +37,7 @@ val decimalNumber by rule {
     "$integerPart$decimalPart$exponentPart".toBigDecimal()
 }
 
-val hexNumber by rule {
+val hexNumber = CharParser.sequence("HexNumber") {
     +symbol("0")
     +character { it == 'x' || it == 'X' }
     val hex = +character { it in '0'.. '9' || it in 'a'.. 'f' || it in 'A'.. 'F' }.repeat(1).map { it.joinToString("") }
@@ -45,7 +47,7 @@ val hexNumber by rule {
     BigInteger(hex, 16).toBigDecimal()
 }
 
-val octalNumber by rule {
+val octalNumber = CharParser.sequence("OctalNumber") {
     +symbol("0")
     +character { it == 'o' || it == 'O' }
     val octal = +character { it in '0'.. '7' }.repeat(1).map { it.joinToString("") }
@@ -55,7 +57,7 @@ val octalNumber by rule {
     BigInteger(octal, 8).toBigDecimal()
 }
 
-val binaryNumber by rule {
+val binaryNumber = CharParser.sequence("BinaryNumber") {
     +symbol("0")
     +character { it == 'b' || it == 'B' }
     val binary = +character { it == '0' || it == '1' }.repeat(1).map { it.joinToString("") }

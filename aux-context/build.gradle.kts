@@ -8,9 +8,10 @@ plugins {
 }
 
 dependencies {
+    api(kotlin("reflect"))
     api(libs.bundles.kotlinx.ecosystem)
     api(libs.bundles.logback)
-    api(libs.adventure.parser)
+    api(libs.bundles.akarui)
     api(libs.bytebuddy)
 
     testImplementation(kotlin("test"))

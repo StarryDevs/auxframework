@@ -1,15 +1,13 @@
 package starry.auxframework.context.property
 
 import arrow.core.Option
-import starry.adventure.core.util.IWrapped
-import starry.adventure.core.util.wrapped
-import starry.adventure.parser.parse
+import starry.akarui.core.chars.CharSource
+import starry.akarui.core.operator.parse
 import starry.auxframework.context.bean.BeanFactory
 import starry.auxframework.util.IBootstrap
 import java.io.File
 import java.net.URI
 import java.net.URL
-import java.nio.CharBuffer
 import java.nio.file.Path
 import java.util.*
 import kotlin.io.path.toPath
@@ -124,7 +122,6 @@ class PropertyResolver(val beanFactory: BeanFactory, properties: Map<String, Str
         val toLong = addConverter { resolve<String>(it)?.toLong() }
         val toDouble = addConverter { resolve<String>(it)?.toDouble() }
         val toFloat = addConverter { resolve<String>(it)?.toFloat() }
-        val toWrapped = addConverter { it.wrapped() as IWrapped<*> }
     }
 
     object Functions : IBootstrap {
@@ -143,7 +140,6 @@ class PropertyResolver(val beanFactory: BeanFactory, properties: Map<String, Str
         val unwrap = addFunction("unwrap") { args ->
             require(args.size == 1) { "Function 'toBoolean' requires exactly one argument" }
             return@addFunction when (val argument = args[0].resolve(this)) {
-                is IWrapped<*> -> argument.unwrap()
                 is Option<*> -> argument.getOrNull()
                 is Optional<*> -> argument.getOrNull()
                 is Result<*> -> argument.getOrNull() ?: argument.exceptionOrNull()
@@ -239,7 +235,7 @@ class PropertyResolver(val beanFactory: BeanFactory, properties: Map<String, Str
     }
 
     fun parse(text: String) = try {
-        CharBuffer.wrap(text).parse(PropertyParser.property)
+        CharSource.wrap(text).parse(PropertyParser.property)
     } catch (error: Throwable) {
         throw IllegalArgumentException("Failed to parse property expression: $text", error)
     }

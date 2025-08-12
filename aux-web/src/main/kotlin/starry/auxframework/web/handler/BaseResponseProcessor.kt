@@ -5,14 +5,10 @@ import io.ktor.server.request.*
 import io.ktor.server.response.*
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.encodeToStream
-import kotlinx.serialization.serializer
-import starry.adventure.core.util.IWrapped
 import starry.auxframework.context.annotation.stereotype.Component
 import java.io.InputStream
 import java.io.OutputStream
 import java.nio.charset.Charset
-import kotlin.reflect.full.createType
 
 @Component
 class BaseResponseProcessor : IResponseProcessor<Any?> {
@@ -22,7 +18,7 @@ class BaseResponseProcessor : IResponseProcessor<Any?> {
 
         @JvmField
         val SERIALIZERS =
-            mutableMapOf<ContentType, (value: Any, charset: Charset, outputStream: OutputStream) -> Unit>()
+            mutableMapOf<ContentType, (value: Any?, charset: Charset, outputStream: OutputStream) -> Unit>()
 
         @JvmField
         val JSON = Json {
@@ -32,7 +28,7 @@ class BaseResponseProcessor : IResponseProcessor<Any?> {
 
         init {
             SERIALIZERS[ContentType.Application.Json] = { value, charset, outputStream ->
-                JSON.encodeToStream(serializer(value::class.createType()), value, outputStream)
+                outputStream.write(JSON.encodeToString(value).toByteArray(charset))
             }
         }
 
@@ -45,14 +41,12 @@ class BaseResponseProcessor : IResponseProcessor<Any?> {
             is String -> call.respondText(value)
             is ByteArray -> call.respondBytes(value)
             is InputStream -> call.respondOutputStream { value.copyTo(this) }
-            is IWrapped<*> -> {
+            is Lazy<*> -> {
                 val contentType = call.request.contentType()
                 call.respondOutputStream(contentType) {
                     val charset = call.request.contentCharset() ?: Charsets.UTF_8
-                    val unwrap = (value as IWrapped<Any?>).unwrap()
-                    if (unwrap != null) (SERIALIZERS[contentType]
-                        ?: SERIALIZERS[ContentType.Application.Json])
-                        ?.invoke(unwrap, charset, this)
+                    val unwrap = value.value
+                    (SERIALIZERS[contentType] ?: SERIALIZERS[ContentType.Application.Json])?.invoke(unwrap, charset, this)
                 }
             }
         }

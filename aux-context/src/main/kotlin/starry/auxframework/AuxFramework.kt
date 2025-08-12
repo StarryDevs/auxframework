@@ -11,7 +11,9 @@ object AuxFramework {
     var arguments: Array<String> = arrayOf()
 
     private val metadata = Properties().apply {
-        load(AuxFramework::class.readResourceAsStream("metadata.properties"))
+        AuxFramework::class.readResourceAsStream("metadata.properties")?.use { inputStream ->
+            load(inputStream)
+        }
     }
 
     val version = AuxVersion(metadata)

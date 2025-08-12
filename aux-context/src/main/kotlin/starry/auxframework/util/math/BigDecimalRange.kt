@@ -1,9 +1,14 @@
 package starry.auxframework.util.math
 
-import starry.adventure.parser.*
-import starry.adventure.parser.operator.repeat
+import starry.akarui.core.ParserState
+import starry.akarui.core.chars.CharParser
+import starry.akarui.core.chars.character
+import starry.akarui.core.chars.symbol
+import starry.akarui.core.chars.whitespace
+import starry.akarui.core.operator.map
+import starry.akarui.core.operator.repeat
+import starry.akarui.core.operator.unaryPlus
 import java.math.BigDecimal
-import kotlin.reflect.jvm.jvmName
 
 /**
  * @param min 如果为 null，则表示没有下限
@@ -18,10 +23,11 @@ class BigDecimalRange(
     val includeMax: Boolean = true
 ) {
 
-    object Parser : AbstractParser<BigDecimalRange>() {
+    object Parser : CharParser<BigDecimalRange> {
 
-        override val name: String = this::class.jvmName
+        override val parserName: String = "BigDecimalRangeParser"
 
+        context(_: ParserState<Char>)
         override fun parse(): BigDecimalRange {
             +whitespace
             val includeMin = +character { it == '(' || it == '[' }.map { it == '[' }

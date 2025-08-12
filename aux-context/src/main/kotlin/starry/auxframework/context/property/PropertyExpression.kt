@@ -52,7 +52,7 @@ class CallPropertyExpression(private val name: String, private val arguments: Li
 
 }
 
-class RunningArgumentPropertyExpression(private val index: Int) : PropertyExpression {
+class ProgramArgumentPropertyExpression(private val index: Int) : PropertyExpression {
 
     override fun resolve(properties: PropertyResolver): Any? {
         if (index < 0 || index > AuxFramework.arguments.size) {

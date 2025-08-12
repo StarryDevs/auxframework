@@ -1,6 +1,7 @@
 package starry.auxframework.validation
 
-import starry.adventure.parser.parse
+import starry.akarui.core.chars.CharSource
+import starry.akarui.core.operator.parse
 import starry.auxframework.context.property.PropertyResolver
 import starry.auxframework.context.property.resolve
 import starry.auxframework.context.property.validation.ValidationException
@@ -9,7 +10,6 @@ import starry.auxframework.util.math.BigDecimalRange
 import starry.auxframework.validation.annotation.Range
 import java.math.BigDecimal
 import java.math.BigInteger
-import java.nio.CharBuffer
 
 object RangeValidator : Validator<Range> {
 
@@ -21,7 +21,7 @@ object RangeValidator : Validator<Range> {
             return
         }
         val range = try {
-            CharBuffer.wrap(configuration.expression).parse(BigDecimalRange.Parser)
+            CharSource.wrap(configuration.expression).parse(BigDecimalRange.Parser)
         } catch (exception: Throwable) {
             throw ValidationException("Invalid range expression: ${configuration.expression}", exception)
         }

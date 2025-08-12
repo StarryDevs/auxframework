@@ -5,7 +5,7 @@ kotlinx-serialization = "1.9.0"
 kotlinx-coroutines = "1.10.2"
 slf4j = "2.1.0-alpha1"
 logback = "1.5.18"
-adventure-kt = "573296b0c9"
+akarui = "8022756e65"
 adventure = "4.23.0"
 bytebuddy = "1.17.5"
 ktor = "3.2.0"
@@ -20,7 +20,8 @@ kotlinx-coroutines = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core",
 slf4j-api = { module = "org.slf4j:slf4j-api", version.ref = "slf4j" }
 logback-classic = { module = "ch.qos.logback:logback-classic", version.ref = "logback" }
 logback-core = { module = "ch.qos.logback:logback-core", version.ref = "logback" }
-adventure-parser = { module = "com.github.StarryDevs.adventure-kt:parser", version.ref = "adventure-kt" }
+akarui-core = { module = "com.github.StarryDevs.akarui:akarui-core", version.ref = "akarui" }
+akarui-tokenizer = { module = "com.github.StarryDevs.akarui:akarui-tokenizer", version.ref = "akarui" }
 adventure-api = { module = "net.kyori:adventure-api", version.ref = "adventure" }
 adventure-text-minimessage = { module = "net.kyori:adventure-text-minimessage", version.ref = "adventure" }
 adventure-text-serializer-ansi = { module = "net.kyori:adventure-text-serializer-ansi", version.ref = "adventure" }
@@ -31,6 +32,7 @@ ktor-server-netty = { module = "io.ktor:ktor-server-netty", version.ref = "ktor"
 [bundles]
 kotlinx-ecosystem = ["kotlinx-datetime", "kotlinx-serialization-properties", "kotlinx-serialization-json", "kotlinx-serialization-hocon", "kotlinx-coroutines"]
 logback = ["logback-classic", "logback-core", "slf4j-api"]
+akarui = ["akarui-core", "akarui-tokenizer"]
 adventure = ["adventure-text-minimessage", "adventure-text-serializer-ansi", "adventure-api"]
 ktor-server-netty = ["ktor-server-core", "ktor-server-netty"]
 

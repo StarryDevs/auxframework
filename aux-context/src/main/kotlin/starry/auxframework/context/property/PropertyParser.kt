@@ -1,51 +1,49 @@
 package starry.auxframework.context.property
 
-import kotlinx.serialization.json.Json
-import starry.adventure.parser.Parser
-import starry.adventure.parser.character
-import starry.adventure.parser.map
-import starry.adventure.parser.operator.*
-import starry.adventure.parser.symbol
-import starry.adventure.parser.util.ParserSequence
-import starry.adventure.parser.util.rule
-import starry.adventure.parser.util.singleLineString
+import starry.akarui.core.chars.CharParser
+import starry.akarui.core.chars.character
+import starry.akarui.core.chars.symbol
+import starry.akarui.core.chars.whitespace
+import starry.akarui.core.operator.choose
+import starry.akarui.core.operator.list
+import starry.akarui.core.operator.map
+import starry.akarui.core.operator.optional
+import starry.akarui.core.operator.orElse
+import starry.akarui.core.operator.repeat
+import starry.akarui.core.operator.unaryPlus
+import starry.akarui.tokenizer.SingleLineStringParser
 
 object PropertyParser {
 
-    val properties: MutableSet<Parser<out PropertyExpression>> by lazy {
-        mutableSetOf(simpleExpression, callExpression, literalExpression, runningArgumentExpression, evaluateExpression)
+    val properties: MutableSet<CharParser<out PropertyExpression>> by lazy {
+        mutableSetOf(simpleExpression, callExpression, literalExpression, programArgumentExpression, evaluateExpression)
     }
 
-    val property: ParserSequence<PropertyExpression> = rule("property") {
+    val property: CharParser<PropertyExpression> = CharParser.sequence("Property") {
         +choose(*properties.toTypedArray())
     }
 
-    val trueLiteral by rule {
+    val trueLiteral = CharParser.sequence("TrueLiteral") {
         +symbol("true").map { ConstantPropertyExpression(true) }
     }
 
-    val falseLiteral by rule {
+    val falseLiteral = CharParser.sequence("FalseLiteral") {
         +symbol("false").map { ConstantPropertyExpression(false) }
     }
 
-    val nullLiteral by rule {
+    val nullLiteral = CharParser.sequence("NullLiteral") {
         +symbol("null").map { ConstantPropertyExpression(null) }
     }
 
-    val stringLiteral by rule {
-        +singleLineString.map { ConstantPropertyExpression(it, Json.encodeToString(it)) }
+    val stringLiteral = CharParser.sequence("StringLiteral") {
+        +choose(*enumValues<SingleLineStringParser>()).map { ConstantPropertyExpression(it.value, it.raw) }
     }
 
-    val literalExpression by rule {
+    val literalExpression = CharParser.sequence("Literal") {
         +choose(trueLiteral, falseLiteral, nullLiteral, stringLiteral)
     }
 
-    val simpleExpressionPart by rule {
-        +symbol(":")
-        +property
-    }
-
-    val evaluateExpression by rule {
+    val evaluateExpression = CharParser.sequence("EvaluateExpression") {
         +symbol("%{")
         val name = +character { it != ':' && it != '}' }.repeat().map { it.joinToString(separator = "") }
         val default = +simpleExpressionPart.optional()
@@ -53,7 +51,12 @@ object PropertyParser {
         EvaluatePropertyExpression(name, default.getOrNull())
     }
 
-    val simpleExpression by rule {
+    val simpleExpressionPart = CharParser.sequence("SimpleExpressionPart") {
+        +symbol(":")
+        +property
+    }
+
+    val simpleExpression = CharParser.sequence("SimpleExpression") {
         +symbol("@{")
         val name = +character { it != ':' && it != '}' }.repeat().map { it.joinToString(separator = "") }
         val default = +simpleExpressionPart.optional()
@@ -61,19 +64,21 @@ object PropertyParser {
         SimplePropertyExpression(name, default.getOrNull())
     }
 
-    val callExpression by rule {
+    val callExpression = CharParser.sequence("CallExpression") {
         +symbol("#")
         val name =
             +character { it.isJavaIdentifierPart() || it == '.' }.repeat().map { it.joinToString(separator = "") }
         require(!name.startsWith(".")) { "Function name cannot start with a dot" }
-        val arguments = +property.list().optional().orElse { emptyList() }
+        val arguments = +property.list(
+            symbol("("), symbol(")"), symbol(","), whitespace
+        ).optional().orElse { emptyList() }
         CallPropertyExpression(name, arguments)
     }
 
-    val runningArgumentExpression by rule {
+    val programArgumentExpression = CharParser.sequence("ProgramArgumentExpression") {
         +symbol("$")
         val index = +character { it.isDigit() }.repeat().map { it.joinToString(separator = "").toInt() }
-        RunningArgumentPropertyExpression(index)
+        ProgramArgumentPropertyExpression(index)
     }
 
 }
